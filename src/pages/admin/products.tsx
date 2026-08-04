@@ -196,11 +196,11 @@ export default function AdminProductsPage() {
   async function onDelete(id: string) {
     if (!confirm("Delete this product?")) return;
     try {
-      await deleteProduct(id);
-      toast.success("Product deleted");
+      const res = await deleteProduct(id);
+      toast.success(res.data?.message || "Product deleted");
       load(page);
-    } catch {
-      toast.error("Delete failed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Delete failed");
     }
   }
 
@@ -458,7 +458,12 @@ export default function AdminProductsPage() {
                         />
                       ) : null}
                     </div>
-                    <span className="font-medium">{product.name}</span>
+                    <div>
+                      <span className="font-medium">{product.name}</span>
+                      {!product.active && (
+                        <span className="ml-2 text-xs text-neutral-400">Hidden</span>
+                      )}
+                    </div>
                   </div>
                 </td>
                 <td className="px-4 py-3">{formatPrice(product.salePrice ?? product.price)}</td>

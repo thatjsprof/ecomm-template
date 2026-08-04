@@ -49,20 +49,23 @@ export default function HomePage({ featured, newArrivals, categories }: HomeProp
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `linear-gradient(120deg, rgba(250,250,250,0.92) 0%, rgba(250,250,250,0.55) 42%, rgba(23,23,23,0.25) 100%), url('${siteConfig.heroImage}')`,
+              backgroundImage: `linear-gradient(120deg, rgba(10,10,10,0.72) 0%, rgba(10,10,10,0.55) 42%, rgba(10,10,10,0.4) 100%), url('${siteConfig.heroImage}')`,
             }}
           />
           <div className="relative mx-auto flex min-h-[78vh] max-w-7xl flex-col justify-end px-6 pb-20 pt-28 lg:px-8">
-            <p className="font-display text-5xl tracking-tight text-neutral-900 sm:text-7xl">
+            <p className="font-display text-5xl tracking-tight text-white sm:text-7xl">
               {siteConfig.nameDisplay}
             </p>
-            <h1 className="mt-4 max-w-xl text-lg leading-relaxed text-neutral-700 sm:text-xl">
+            <h1 className="mt-4 max-w-xl text-lg leading-relaxed text-white/80 sm:text-xl">
               {siteConfig.heroTagline}
             </h1>
             <div className="mt-8">
               <Link
                 href="/shop"
-                className={cn(buttonVariants({ size: "lg" }), "rounded-full px-8")}
+                className={cn(
+                  buttonVariants({ size: "lg", variant: "secondary" }),
+                  "rounded-full bg-white px-8 text-neutral-900 hover:bg-white/90"
+                )}
               >
                 Shop collection
               </Link>

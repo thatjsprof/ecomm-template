@@ -13,9 +13,12 @@ function queryValue(value: string | string[] | undefined): string {
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
-  const provider = queryValue(router.query.provider) || "paystack";
+  const provider = queryValue(router.query.provider) || "flutterwave";
   const reference =
-    queryValue(router.query.reference) || queryValue(router.query.trxref);
+    queryValue(router.query.tx_ref) ||
+    queryValue(router.query.reference) ||
+    queryValue(router.query.trxref);
+  const transactionId = queryValue(router.query.transaction_id);
   const [status, setStatus] = useState<"loading" | "success" | "failed">("loading");
 
   useEffect(() => {
@@ -26,12 +29,12 @@ export default function PaymentSuccessPage() {
       return;
     }
 
-    verifyPayment(provider, reference)
+    verifyPayment(provider, reference, transactionId || undefined)
       .then((res) => {
         setStatus(res.data?.paid ? "success" : "failed");
       })
       .catch(() => setStatus("failed"));
-  }, [router.isReady, provider, reference]);
+  }, [router.isReady, provider, reference, transactionId]);
 
   return (
     <>

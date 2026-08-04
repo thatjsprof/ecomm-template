@@ -82,7 +82,9 @@ export async function updateProduct(id: string, payload: Record<string, unknown>
 }
 
 export async function deleteProduct(id: string) {
-  const { data } = await api.delete<ApiResponse<{ message: string }>>(`/products/${id}`);
+  const { data } = await api.delete<
+    ApiResponse<{ message: string; archived?: boolean }>
+  >(`/products/${id}`);
   return data;
 }
 
@@ -220,16 +222,23 @@ export async function updateOrderStatus(id: string, status: string) {
   return data;
 }
 
-export async function initPayment(provider: "paystack" | "korapay", orderId: string) {
+export async function initPayment(provider: "flutterwave" | "korapay", orderId: string) {
   const { data } = await api.post<
     ApiResponse<{ authorizationUrl: string; reference: string }>
   >(`/payments/${provider}`, { orderId });
   return data;
 }
 
-export async function verifyPayment(provider: string, reference: string) {
+export async function verifyPayment(
+  provider: string,
+  reference: string,
+  transactionId?: string
+) {
   const { data } = await api.get<ApiResponse<{ paid: boolean; order?: Order }>>(
-    `/payments/verify/${provider}/${reference}`
+    `/payments/verify/${provider}/${encodeURIComponent(reference)}`,
+    {
+      params: transactionId ? { transaction_id: transactionId } : undefined,
+    }
   );
   return data;
 }

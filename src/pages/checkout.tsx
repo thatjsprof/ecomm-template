@@ -31,7 +31,7 @@ const schema = z.object({
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
   country: z.string().min(1, "Country is required"),
-  paymentProvider: z.enum(["paystack", "korapay"]),
+  paymentProvider: z.enum(["flutterwave", "korapay"]),
   shippingOptionId: z.string().min(1, "Shipping option is required"),
   couponCode: z.string().optional(),
   saveAddress: z.boolean().optional(),
@@ -60,7 +60,7 @@ export default function CheckoutPage() {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      paymentProvider: "paystack",
+      paymentProvider: "flutterwave",
       country: siteConfig.defaultCountry,
       shippingOptionId: "",
       saveAddress: true,
@@ -472,22 +472,27 @@ export default function CheckoutPage() {
           <div>
             <Label className="mb-3 block">Payment method</Label>
             <div className="grid gap-3 sm:grid-cols-2">
-              {(["paystack", "korapay"] as const).map((p) => (
+              {(
+                [
+                  { value: "flutterwave", label: "Flutterwave" },
+                  { value: "korapay", label: "Korapay" },
+                ] as const
+              ).map((p) => (
                 <label
-                  key={p}
-                  className={`cursor-pointer rounded-xl border px-4 py-4 text-sm capitalize transition-colors ${
-                    provider === p
+                  key={p.value}
+                  className={`cursor-pointer rounded-xl border px-4 py-4 text-sm transition-colors ${
+                    provider === p.value
                       ? "border-neutral-900 bg-neutral-50"
                       : "border-neutral-200 hover:border-neutral-400"
                   }`}
                 >
                   <input
                     type="radio"
-                    value={p}
+                    value={p.value}
                     className="mr-2"
                     {...register("paymentProvider")}
                   />
-                  {p}
+                  {p.label}
                 </label>
               ))}
             </div>
