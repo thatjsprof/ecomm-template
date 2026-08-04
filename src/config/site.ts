@@ -1,0 +1,56 @@
+/**
+ * Single place to rebrand / reconfigure the storefront.
+ *
+ * Theme colors & radius: `src/styles/globals.css` (`:root`)
+ * Fonts are loaded in `src/pages/_app.tsx` (next/font needs static imports)
+ */
+
+export const siteConfig = {
+  /** Display name (titles, copyright, admin) */
+  name: "Alurd",
+  /** Logo / hero text (often all-caps) */
+  nameDisplay: "Alurd",
+  /** Short title fragment e.g. "Atelier — Modern Essentials" */
+  tagline: "Modern Essentials",
+  /** Meta description / OG */
+  description:
+    "A curated selection of considered essentials. Quiet luxury for everyday living.",
+  /** Hero supporting line */
+  heroTagline: "Considered essentials for a quieter kind of luxury.",
+  /** Footer blurb */
+  footerTagline:
+    "Considered essentials for modern living. Quiet luxury, refined materials, lasting design.",
+  /** Hero background image URL */
+  heroImage:
+    "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=2000&q=80",
+
+  url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
+  apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api",
+
+  locale: "en-NG",
+  htmlLang: "en",
+  currency: "NGN",
+  currencyMinimumFractionDigits: 0,
+
+  defaultCountry: "Nigeria",
+
+  contact: {
+    email: "",
+    phone: "",
+  },
+
+  social: [] as { name: string; href: string }[],
+
+  /** Documented for rebrands — swap imports in `_app.tsx` to match */
+  fonts: {
+    display: "Cormorant Garamond",
+    sans: "Manrope",
+  },
+} as const;
+
+export function siteTitle(page?: string): string {
+  if (!page) {
+    return `${siteConfig.name} — ${siteConfig.tagline}`;
+  }
+  return `${page} · ${siteConfig.name}`;
+}
