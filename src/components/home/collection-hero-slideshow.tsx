@@ -39,7 +39,7 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
               "mt-8 rounded-full bg-white px-8 text-neutral-900 hover:bg-white/90"
             )}
           >
-            Shop collection
+            Shop Now
           </Link>
         </div>
       </section>
@@ -47,6 +47,7 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
   }
 
   const current = slides[index];
+  const ctaLabel = current.ctaLabel?.trim() || "Shop Now";
 
   return (
     <section
@@ -95,7 +96,7 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
               "rounded-full bg-white px-8 text-neutral-900 hover:bg-white/90"
             )}
           >
-            Shop {current.name}
+            {ctaLabel}
           </Link>
         </div>
 

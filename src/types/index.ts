@@ -34,6 +34,7 @@ export interface Collection {
   image: string | null;
   active: boolean;
   showInHero: boolean;
+  ctaLabel?: string | null;
   sortOrder: number;
   productIds?: string[];
   products?: Product[];

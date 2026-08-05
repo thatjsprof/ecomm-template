@@ -28,6 +28,7 @@ const emptyForm = {
   image: null as string | null,
   active: true,
   showInHero: false,
+  ctaLabel: "Shop Now",
   sortOrder: "0",
   productIds: [] as string[],
 };
@@ -67,6 +68,7 @@ export default function AdminCollectionsPage() {
       image: collection.image,
       active: collection.active,
       showInHero: collection.showInHero,
+      ctaLabel: collection.ctaLabel || "Shop Now",
       sortOrder: String(collection.sortOrder ?? 0),
       productIds: collection.productIds || collection.products?.map((p) => p.id) || [],
     });
@@ -109,6 +111,7 @@ export default function AdminCollectionsPage() {
         image: form.image,
         active: form.active,
         showInHero: form.showInHero,
+        ctaLabel: form.ctaLabel.trim() || "Shop Now",
         sortOrder: Number(form.sortOrder) || 0,
         productIds: form.productIds,
       };
@@ -183,6 +186,16 @@ export default function AdminCollectionsPage() {
                     <img src={form.image} alt="" className="h-40 w-full object-cover" />
                   </div>
                 )}
+              </div>
+              <div className="space-y-1">
+                <Label>Button text (CTA)</Label>
+                <Input
+                  value={form.ctaLabel}
+                  placeholder="Shop Now"
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, ctaLabel: e.target.value }))
+                  }
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
