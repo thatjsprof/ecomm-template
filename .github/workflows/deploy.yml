@@ -29,5 +29,12 @@ jobs:
             npm ci
             npm run build
             pm2 restart alurd-web --update-env
-            sleep 2
-            curl -fsS -o /dev/null -w "alurd-web:%{http_code}\n" http://127.0.0.1:3002/
+            for i in $(seq 1 30); do
+              if curl -fsS -o /dev/null -w "alurd-web:%{http_code}\n" http://127.0.0.1:3002/; then
+                exit 0
+              fi
+              sleep 1
+            done
+            echo "alurd-web health check failed"
+            pm2 logs alurd-web --lines 40 --nostream || true
+            exit 1
