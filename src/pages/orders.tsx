@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { useAuth } from "@/hooks/use-auth";
 import { getMyOrders } from "@/services/api";
 import type { Order } from "@/types";
-import { formatPrice } from "@/utils/format";
+import { formatPrice, formatVariantLabel } from "@/utils/format";
 import { Badge } from "@/components/ui/badge";
 
 export default function OrdersPage() {
@@ -68,15 +68,18 @@ export default function OrdersPage() {
                 </div>
               </div>
               <div className="mt-4 space-y-1 text-sm text-neutral-600">
-                {order.items.map((item) => (
-                  <p key={item.id}>
-                    {item.product?.name || "Product"}
-                    {item.variantAttributes
-                      ? ` (${Object.values(item.variantAttributes).join(" / ")})`
-                      : ""}{" "}
-                    × {item.quantity}
-                  </p>
-                ))}
+                {order.items.map((item) => {
+                  const variant = formatVariantLabel(item.variantAttributes);
+                  return (
+                    <p key={item.id}>
+                      {item.product?.name || "Product"}
+                      {variant ? (
+                        <span className="text-neutral-500"> · {variant}</span>
+                      ) : null}{" "}
+                      × {item.quantity}
+                    </p>
+                  );
+                })}
                 {(order.shippingMethod || Number(order.shipping) > 0) && (
                   <p className="pt-2 text-neutral-500">
                     {order.shippingMethod || "Shipping"}

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { deleteOrder, getAdminOrders, updateOrderStatus } from "@/services/api";
 import type { Order, OrderStatus, Pagination } from "@/types";
-import { formatPrice } from "@/utils/format";
+import { formatPrice, formatVariantLabel } from "@/utils/format";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -129,15 +129,18 @@ export default function AdminOrdersPage() {
               </div>
             </div>
             <div className="mt-4 border-t border-neutral-100 pt-3 text-sm text-neutral-600">
-              {order.items.map((item) => (
-                <p key={item.id}>
-                  {item.product?.name}
-                  {item.variantAttributes
-                    ? ` (${Object.values(item.variantAttributes).join(" / ")})`
-                    : ""}{" "}
-                  × {item.quantity}
-                </p>
-              ))}
+              {order.items.map((item) => {
+                const variant = formatVariantLabel(item.variantAttributes);
+                return (
+                  <p key={item.id}>
+                    {item.product?.name}
+                    {variant ? (
+                      <span className="text-neutral-500"> · {variant}</span>
+                    ) : null}{" "}
+                    × {item.quantity}
+                  </p>
+                );
+              })}
               {(order.shippingMethod || Number(order.shipping) > 0) && (
                 <p className="mt-2 text-neutral-500">
                   {order.shippingMethod || "Shipping"}
