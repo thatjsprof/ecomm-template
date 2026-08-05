@@ -65,7 +65,7 @@ export default function HomePage({
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{
-                backgroundImage: `linear-gradient(120deg, rgba(10,10,10,0.72) 0%, rgba(10,10,10,0.55) 42%, rgba(10,10,10,0.4) 100%), url('${siteConfig.heroImage}')`,
+                backgroundImage: `linear-gradient(120deg, rgba(10,10,10,0.52) 0%, rgba(10,10,10,0.38) 42%, rgba(10,10,10,0.28) 100%), url('${siteConfig.heroImage}')`,
               }}
             />
             <div className="relative mx-auto flex min-h-[78vh] max-w-7xl flex-col justify-end px-6 pb-20 pt-28 lg:px-8">

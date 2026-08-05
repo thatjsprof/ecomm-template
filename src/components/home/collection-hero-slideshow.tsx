@@ -78,7 +78,7 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
             alt=""
             className="absolute inset-0 size-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/80 via-neutral-950/35 to-neutral-950/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/55 via-neutral-950/20 to-neutral-950/10" />
         </Link>
       ))}
 
