@@ -36,6 +36,7 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
   const [transitionOn, setTransitionOn] = useState(true);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxZoom, setLightboxZoom] = useState(1);
+  const [lightboxPan, setLightboxPan] = useState({ x: 0, y: 0 });
   const [lightboxPos, setLightboxPos] = useState(looping ? 1 : 0);
   const [lightboxTransitionOn, setLightboxTransitionOn] = useState(true);
   const [hoverNav, setHoverNav] = useState(false);
@@ -43,6 +44,15 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
   const [thumbOverflow, setThumbOverflow] = useState({ left: false, right: false });
   const animatingRef = useRef(false);
   const lightboxAnimatingRef = useRef(false);
+  const panDragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    originX: number;
+    originY: number;
+    moved: boolean;
+  } | null>(null);
+  const [panning, setPanning] = useState(false);
 
   const mainSlides = looping ? [images[n - 1], ...images, images[0]] : images;
   const lightboxSlides = mainSlides;
@@ -196,6 +206,7 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
     if (!looping || lightboxAnimatingRef.current) return;
     lightboxAnimatingRef.current = true;
     setLightboxZoom(1);
+    setLightboxPan({ x: 0, y: 0 });
     setLightboxTransitionOn(true);
     setLightboxPos((p) => p + delta);
   }
@@ -203,7 +214,55 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
   function openLightbox() {
     jumpLightboxTo(activeIndex);
     setLightboxZoom(1);
+    setLightboxPan({ x: 0, y: 0 });
     setLightboxOpen(true);
+  }
+
+  function toggleLightboxZoom() {
+    setLightboxZoom((z) => {
+      if (z >= 1.75) {
+        setLightboxPan({ x: 0, y: 0 });
+        return 1;
+      }
+      return z + 0.5;
+    });
+  }
+
+  function onPanPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (lightboxZoom <= 1) return;
+    e.preventDefault();
+    e.stopPropagation();
+    panDragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      originX: lightboxPan.x,
+      originY: lightboxPan.y,
+      moved: false,
+    };
+    setPanning(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onPanPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    const drag = panDragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    const dx = e.clientX - drag.startX;
+    const dy = e.clientY - drag.startY;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) drag.moved = true;
+    setLightboxPan({ x: drag.originX + dx, y: drag.originY + dy });
+  }
+
+  function onPanPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+    const drag = panDragRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    panDragRef.current = null;
+    setPanning(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      /* already released */
+    }
   }
 
   useEffect(() => {
@@ -325,7 +384,11 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
                   data-thumb={index}
                   onClick={() => {
                     jumpMainTo(index);
-                    if (lightboxOpen) jumpLightboxTo(index);
+                    if (lightboxOpen) {
+                      jumpLightboxTo(index);
+                      setLightboxZoom(1);
+                      setLightboxPan({ x: 0, y: 0 });
+                    }
                   }}
                   className={cn(
                     "relative h-20 w-16 shrink-0 rounded-lg border-2 p-0.5 transition-opacity",
@@ -357,7 +420,7 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
             <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
-                onClick={() => setLightboxZoom((z) => (z >= 1.75 ? 1 : z + 0.5))}
+                onClick={toggleLightboxZoom}
                 className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm hover:bg-white/15"
               >
                 <ZoomIn className="size-4" />
@@ -374,14 +437,11 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
             </div>
           </div>
 
-          <div
-            className="relative min-h-0 flex-1 overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="relative min-h-0 flex-1 overflow-hidden">
             <div
               className={cn(
                 "flex h-full",
-                lightboxTransitionOn && "transition-transform duration-300 ease-out"
+                lightboxTransitionOn && !panning && "transition-transform duration-300 ease-out"
               )}
               style={{ transform: `translateX(-${lightboxPos * 100}%)` }}
               onTransitionEnd={(e) => {
@@ -394,15 +454,29 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
                   key={`lb-${index}-${img}`}
                   className="relative flex h-full w-full min-w-full shrink-0 basis-full items-center justify-center px-4"
                 >
+                  {/* Intrinsic box so letterbox / empty stage clicks close the lightbox */}
                   <div
-                    className="relative h-full max-h-full w-full max-w-6xl transition-transform duration-200"
-                    style={{ transform: `scale(${lightboxZoom})` }}
+                    className={cn(
+                      "relative max-h-full max-w-full touch-none",
+                      lightboxZoom > 1 && (panning ? "cursor-grabbing" : "cursor-grab"),
+                      !panning && "transition-transform duration-200"
+                    )}
+                    style={{
+                      transform: `translate(${lightboxPan.x}px, ${lightboxPan.y}px) scale(${lightboxZoom})`,
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={onPanPointerDown}
+                    onPointerMove={onPanPointerMove}
+                    onPointerUp={onPanPointerUp}
+                    onPointerCancel={onPanPointerUp}
                   >
                     <Image
                       src={img}
                       alt={alt}
-                      fill
-                      className="object-contain"
+                      width={1600}
+                      height={2000}
+                      draggable={false}
+                      className="h-auto max-h-[min(100%,calc(100vh-11rem))] w-auto max-w-[min(100%,72rem)] object-contain select-none"
                       sizes="100vw"
                       priority
                     />

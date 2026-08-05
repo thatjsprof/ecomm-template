@@ -26,6 +26,22 @@ export interface Category {
   _count?: { products: number };
 }
 
+export interface Collection {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  image: string | null;
+  active: boolean;
+  showInHero: boolean;
+  sortOrder: number;
+  productIds?: string[];
+  products?: Product[];
+  _count?: { products: number };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ProductOptionValue {
   value: string;
   image?: string | null;

@@ -88,6 +88,26 @@ export default function OrdersPage() {
                       : ` · ${formatPrice(order.shipping)}`}
                   </p>
                 )}
+                {order.shippingAddress && (
+                  <div className="mt-3 rounded-lg bg-neutral-50 px-3 py-2 text-xs leading-relaxed text-neutral-600">
+                    <p className="font-medium text-neutral-800">Ship to</p>
+                    <p className="mt-1">
+                      {order.shippingAddress.name}
+                      {(order.shippingAddress.phone || order.customerPhone) &&
+                        ` · ${order.shippingAddress.phone || order.customerPhone}`}
+                    </p>
+                    <p>{order.shippingAddress.address}</p>
+                    <p>
+                      {[
+                        order.shippingAddress.city,
+                        order.shippingAddress.state,
+                        order.shippingAddress.country,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           ))}

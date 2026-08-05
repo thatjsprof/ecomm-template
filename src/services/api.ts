@@ -3,6 +3,7 @@ import type {
   ApiResponse,
   CartItem,
   Category,
+  Collection,
   Coupon,
   NewsletterSubscriber,
   Order,
@@ -65,10 +66,10 @@ export async function getProduct(slug: string) {
   return data;
 }
 
-export async function getAdminProducts(page = 1) {
+export async function getAdminProducts(page = 1, limit = 20) {
   const { data } = await api.get<
     ApiResponse<{ products: Product[]; pagination: Pagination }>
-  >("/products/admin/all", { params: { page } });
+  >("/products/admin/all", { params: { page, limit } });
   return data;
 }
 
@@ -109,6 +110,38 @@ export async function updateCategory(
 
 export async function deleteCategory(id: string) {
   const { data } = await api.delete<ApiResponse<{ message: string }>>(`/categories/${id}`);
+  return data;
+}
+
+export async function getCollections(heroOnly = false) {
+  const { data } = await api.get<ApiResponse<Collection[]>>("/collections", {
+    params: heroOnly ? { hero: "true" } : undefined,
+  });
+  return data;
+}
+
+export async function getAdminCollections() {
+  const { data } = await api.get<ApiResponse<Collection[]>>("/collections/admin/all");
+  return data;
+}
+
+export async function getCollection(slug: string) {
+  const { data } = await api.get<ApiResponse<Collection>>(`/collections/${encodeURIComponent(slug)}`);
+  return data;
+}
+
+export async function createCollection(payload: Record<string, unknown>) {
+  const { data } = await api.post<ApiResponse<Collection>>("/collections", payload);
+  return data;
+}
+
+export async function updateCollection(id: string, payload: Record<string, unknown>) {
+  const { data } = await api.put<ApiResponse<Collection>>(`/collections/${id}`, payload);
+  return data;
+}
+
+export async function deleteCollection(id: string) {
+  const { data } = await api.delete<ApiResponse<{ message: string }>>(`/collections/${id}`);
   return data;
 }
 

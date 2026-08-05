@@ -20,9 +20,21 @@ export const siteConfig = {
   /** Footer blurb */
   footerTagline:
     "Considered essentials for modern living. Quiet luxury, refined materials, lasting design.",
-  /** Hero background image URL */
+  /** Classic hero background image URL (used when homeHero.style is "classic") */
   heroImage:
     "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=2000&q=80",
+
+  /**
+   * Home hero style:
+   * - "classic": single brand hero image + CTA
+   * - "collectionSlideshow": fading full-bleed slides; each slide links to a collection
+   *   (admin: Collections → enable "Show in hero")
+   */
+  homeHero: {
+    style: "collectionSlideshow" as "classic" | "collectionSlideshow",
+    /** Fade interval for collectionSlideshow */
+    intervalMs: 5500,
+  },
 
   url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
   apiUrl: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api",

@@ -1,25 +1,29 @@
 import Link from "next/link";
 import type { GetServerSideProps } from "next";
 import { ProductCard } from "@/components/products/product-card";
+import { CollectionHeroSlideshow } from "@/components/home/collection-hero-slideshow";
 import { PageHead } from "@/components/seo/page-head";
 import { buttonVariants } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
-import { getCategories, getProducts } from "@/services/api";
-import type { Category, Product } from "@/types";
+import { getCategories, getCollections, getProducts } from "@/services/api";
+import type { Category, Collection, Product } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface HomeProps {
   featured: Product[];
   newArrivals: Product[];
   categories: Category[];
+  heroCollections: Collection[];
 }
 
 export const getServerSideProps: GetServerSideProps<HomeProps> = async () => {
   try {
-    const [featuredRes, newRes, categoriesRes] = await Promise.all([
+    const useSlideshow = siteConfig.homeHero.style === "collectionSlideshow";
+    const [featuredRes, newRes, categoriesRes, collectionsRes] = await Promise.all([
       getProducts({ featured: "true", limit: 4 }),
       getProducts({ newArrival: "true", limit: 4 }),
       getCategories(),
+      useSlideshow ? getCollections(true) : Promise.resolve({ data: [] as Collection[] }),
     ]);
 
     return {
@@ -27,6 +31,7 @@ export const getServerSideProps: GetServerSideProps<HomeProps> = async () => {
         featured: featuredRes.data?.products || [],
         newArrivals: newRes.data?.products || [],
         categories: categoriesRes.data || [],
+        heroCollections: collectionsRes.data || [],
       },
     };
   } catch {
@@ -35,43 +40,55 @@ export const getServerSideProps: GetServerSideProps<HomeProps> = async () => {
         featured: [],
         newArrivals: [],
         categories: [],
+        heroCollections: [],
       },
     };
   }
 };
 
-export default function HomePage({ featured, newArrivals, categories }: HomeProps) {
+export default function HomePage({
+  featured,
+  newArrivals,
+  categories,
+  heroCollections,
+}: HomeProps) {
+  const useSlideshow = siteConfig.homeHero.style === "collectionSlideshow";
+
   return (
     <>
       <PageHead absolute title={`${siteConfig.name} — ${siteConfig.tagline}`} />
       <div>
-        <section className="relative min-h-[78vh] overflow-hidden bg-neutral-100">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage: `linear-gradient(120deg, rgba(10,10,10,0.72) 0%, rgba(10,10,10,0.55) 42%, rgba(10,10,10,0.4) 100%), url('${siteConfig.heroImage}')`,
-            }}
-          />
-          <div className="relative mx-auto flex min-h-[78vh] max-w-7xl flex-col justify-end px-6 pb-20 pt-28 lg:px-8">
-            <p className="font-display text-5xl tracking-tight text-white sm:text-7xl">
-              {siteConfig.nameDisplay}
-            </p>
-            <h1 className="mt-4 max-w-xl text-lg leading-relaxed text-white/80 sm:text-xl">
-              {siteConfig.heroTagline}
-            </h1>
-            <div className="mt-8">
-              <Link
-                href="/shop"
-                className={cn(
-                  buttonVariants({ size: "lg", variant: "secondary" }),
-                  "rounded-full bg-white px-8 text-neutral-900 hover:bg-white/90"
-                )}
-              >
-                Shop collection
-              </Link>
+        {useSlideshow ? (
+          <CollectionHeroSlideshow collections={heroCollections} />
+        ) : (
+          <section className="relative min-h-[78vh] overflow-hidden bg-neutral-100">
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage: `linear-gradient(120deg, rgba(10,10,10,0.72) 0%, rgba(10,10,10,0.55) 42%, rgba(10,10,10,0.4) 100%), url('${siteConfig.heroImage}')`,
+              }}
+            />
+            <div className="relative mx-auto flex min-h-[78vh] max-w-7xl flex-col justify-end px-6 pb-20 pt-28 lg:px-8">
+              <p className="font-display text-5xl tracking-tight text-white sm:text-7xl">
+                {siteConfig.nameDisplay}
+              </p>
+              <h1 className="mt-4 max-w-xl text-lg leading-relaxed text-white/80 sm:text-xl">
+                {siteConfig.heroTagline}
+              </h1>
+              <div className="mt-8">
+                <Link
+                  href="/shop"
+                  className={cn(
+                    buttonVariants({ size: "lg", variant: "secondary" }),
+                    "rounded-full bg-white px-8 text-neutral-900 hover:bg-white/90"
+                  )}
+                >
+                  Shop collection
+                </Link>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         <section className="mx-auto max-w-7xl px-6 py-24 lg:px-8">
           <div className="mb-12 flex items-end justify-between">
