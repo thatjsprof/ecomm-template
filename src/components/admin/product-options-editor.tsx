@@ -1,18 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { Plus, Trash2, Upload, X } from "lucide-react";
 import { uploadImage } from "@/services/api";
 import type { ProductOption } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 export type VariantRow = {
@@ -211,7 +206,21 @@ export function ProductOptionsEditor({
   } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!imageTarget) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setImageTarget(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [imageTarget]);
 
   // Auto-generate combinations when option names/values change (debounced)
   useEffect(() => {
@@ -363,9 +372,9 @@ export function ProductOptionsEditor({
                 Values
               </p>
               {option.values.map((entry, valueIndex) => (
-                <div key={valueIndex} className="flex items-stretch gap-2">
+                <div key={valueIndex} className="flex items-center gap-2">
                   <Input
-                    className="h-20 flex-1 bg-white"
+                    className="min-w-0 flex-1 bg-white"
                     placeholder="Value"
                     value={entry.value}
                     onChange={(e) =>
@@ -376,23 +385,21 @@ export function ProductOptionsEditor({
                     type="button"
                     onClick={() => setImageTarget({ optionIndex, valueIndex })}
                     className={cn(
-                      "relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-center transition-colors hover:border-neutral-400 hover:bg-white",
-                      entry.image && "border-solid border-neutral-200 p-0"
+                      "relative h-8 w-24 shrink-0 overflow-hidden rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-center transition-colors hover:border-neutral-400 hover:bg-white",
+                      entry.image && "border-solid border-neutral-200"
                     )}
                   >
                     {entry.image ? (
                       <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={entry.image} alt="" className="size-full object-cover" />
-                        <span className="absolute inset-x-0 bottom-0 bg-black/50 py-0.5 text-[9px] text-white">
+                        <span className="absolute inset-x-0 bottom-0 bg-black/55 text-[8px] leading-3 text-white">
                           Change
                         </span>
                       </>
                     ) : (
-                      <span className="flex h-full flex-col items-center justify-center px-1 text-[10px] leading-tight text-neutral-500">
-                        Click to
-                        <br />
-                        Add Image
+                      <span className="flex h-full items-center justify-center px-1 text-[10px] leading-none text-neutral-500">
+                        Add image
                       </span>
                     )}
                   </button>
@@ -401,7 +408,7 @@ export function ProductOptionsEditor({
                       type="button"
                       size="sm"
                       variant="ghost"
-                      className="h-20 px-2"
+                      className="h-8 px-2"
                       onClick={() =>
                         updateOptionValue(optionIndex, valueIndex, { image: null })
                       }
@@ -414,7 +421,7 @@ export function ProductOptionsEditor({
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="h-20 px-2"
+                    className="h-8 px-2"
                     disabled={option.values.length <= 1}
                     onClick={() =>
                       updateOption(optionIndex, {
@@ -511,81 +518,104 @@ export function ProductOptionsEditor({
         )}
       </div>
 
-      <Dialog
-        open={imageTarget != null}
-        onOpenChange={(open) => {
-          if (!open) setImageTarget(null);
-        }}
-      >
-        <DialogContent className="sm:max-w-lg" showCloseButton>
-          <DialogHeader>
-            <DialogTitle>Upload Files</DialogTitle>
-          </DialogHeader>
-
-          <button
-            type="button"
-            disabled={uploading}
-            onClick={() => fileInputRef.current?.click()}
-            onDragEnter={(e) => {
-              e.preventDefault();
-              setDragging(true);
-            }}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragging(true);
-            }}
-            onDragLeave={(e) => {
-              e.preventDefault();
-              setDragging(false);
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDragging(false);
-              if (e.dataTransfer.files?.length) void attachFiles(e.dataTransfer.files);
-            }}
-            className={cn(
-              "flex min-h-44 w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 px-6 py-10 text-center transition-colors",
-              dragging && "border-neutral-900 bg-neutral-100",
-              uploading && "opacity-60"
-            )}
-          >
-            <Upload className="size-8 text-neutral-400" />
-            <p className="text-sm text-neutral-600">
-              {uploading ? "Uploading…" : "Click here or drag and drop to upload files."}
-            </p>
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files?.length) void attachFiles(e.target.files);
-              e.target.value = "";
-            }}
-          />
-
-          {images.length > 0 && (
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-neutral-800">Choose from Existing</p>
-              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-                {images.map((url) => (
-                  <button
-                    key={url}
-                    type="button"
-                    onClick={() => selectExisting(url)}
-                    className="relative aspect-square overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50 hover:ring-2 hover:ring-neutral-900"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt="" className="size-full object-cover" />
-                  </button>
-                ))}
+      {mounted &&
+        imageTarget &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <button
+              type="button"
+              aria-label="Close dialog"
+              className="absolute inset-0 bg-black/50 backdrop-blur-[1px]"
+              onClick={() => setImageTarget(null)}
+            />
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="upload-files-title"
+              className="relative z-10 grid w-full max-w-lg gap-4 rounded-xl bg-white p-4 text-sm shadow-xl ring-1 ring-black/10"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h2 id="upload-files-title" className="text-base font-medium text-neutral-900">
+                  Upload Files
+                </h2>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setImageTarget(null)}
+                  aria-label="Close"
+                >
+                  <X className="size-4" />
+                </Button>
               </div>
+
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => fileInputRef.current?.click()}
+                onDragEnter={(e) => {
+                  e.preventDefault();
+                  setDragging(true);
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragging(true);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  setDragging(false);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragging(false);
+                  if (e.dataTransfer.files?.length) void attachFiles(e.dataTransfer.files);
+                }}
+                className={cn(
+                  "flex min-h-44 w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 px-6 py-10 text-center transition-colors",
+                  dragging && "border-neutral-900 bg-neutral-100",
+                  uploading && "opacity-60"
+                )}
+              >
+                <Upload className="size-8 text-neutral-400" />
+                <p className="text-sm text-neutral-600">
+                  {uploading ? "Uploading…" : "Click here or drag and drop to upload files."}
+                </p>
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.length) void attachFiles(e.target.files);
+                  e.target.value = "";
+                }}
+              />
+
+              {images.length > 0 && (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-neutral-800">Choose from Existing</p>
+                  <div className="grid max-h-48 grid-cols-4 gap-2 overflow-y-auto sm:grid-cols-6">
+                    {images.map((url) => (
+                      <button
+                        key={url}
+                        type="button"
+                        onClick={() => selectExisting(url)}
+                        className="relative aspect-square overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50 hover:ring-2 hover:ring-neutral-900"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={url} alt="" className="size-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
