@@ -1,9 +1,17 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { getAdminOrders, updateOrderStatus } from "@/services/api";
+import { deleteOrder, getAdminOrders, updateOrderStatus } from "@/services/api";
 import type { Order, OrderStatus, Pagination } from "@/types";
 import { formatPrice } from "@/utils/format";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -25,6 +33,8 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [pagination, setPagination] = useState<Pagination | null>(null);
   const [page, setPage] = useState(1);
+  const [deleting, setDeleting] = useState<Order | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   async function load(nextPage = page) {
     const res = await getAdminOrders(nextPage);
@@ -47,6 +57,21 @@ export default function AdminOrdersPage() {
     }
   }
 
+  async function onConfirmDelete() {
+    if (!deleting) return;
+    setRemoving(true);
+    try {
+      await deleteOrder(deleting.id);
+      toast.success("Order deleted");
+      setDeleting(null);
+      load(page);
+    } catch {
+      toast.error("Delete failed");
+    } finally {
+      setRemoving(false);
+    }
+  }
+
   return (
     <div>
       <h1 className="font-display text-3xl">Orders</h1>
@@ -57,7 +82,14 @@ export default function AdminOrdersPage() {
           <div key={order.id} className="rounded-2xl border border-neutral-200 bg-white p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="font-medium">{order.orderNumber}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-medium">{order.orderNumber}</p>
+                  {order.paymentStatus === "SUCCESS" && (
+                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-emerald-700">
+                      Paid
+                    </span>
+                  )}
+                </div>
                 <p className="mt-1 text-sm text-neutral-500">
                   {order.customerName} · {order.customerEmail}
                 </p>
@@ -67,7 +99,7 @@ export default function AdminOrdersPage() {
               </div>
               <div className="text-right">
                 <p className="font-medium">{formatPrice(order.total)}</p>
-                <div className="mt-2">
+                <div className="mt-2 flex flex-wrap items-center justify-end gap-2">
                   <Select
                     value={order.status}
                     onValueChange={(v) => v && onStatus(order.id, String(v))}
@@ -84,6 +116,15 @@ export default function AdminOrdersPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700"
+                    onClick={() => setDeleting(order)}
+                  >
+                    Delete
+                  </Button>
                 </div>
               </div>
             </div>
@@ -104,6 +145,32 @@ export default function AdminOrdersPage() {
                     ? " · Free"
                     : ` · ${formatPrice(order.shipping)}`}
                 </p>
+              )}
+              {order.paymentProvider && (
+                <p className="mt-2 text-neutral-500">
+                  Payment ·{" "}
+                  <span className="capitalize text-neutral-700">{order.paymentProvider}</span>
+                </p>
+              )}
+              {order.shippingAddress && (
+                <div className="mt-3 rounded-lg bg-neutral-50 px-3 py-2 text-xs leading-relaxed text-neutral-600">
+                  <p className="font-medium text-neutral-800">Ship to</p>
+                  <p className="mt-1">
+                    {order.shippingAddress.name}
+                    {(order.shippingAddress.phone || order.customerPhone) &&
+                      ` · ${order.shippingAddress.phone || order.customerPhone}`}
+                  </p>
+                  <p>{order.shippingAddress.address}</p>
+                  <p>
+                    {[
+                      order.shippingAddress.city,
+                      order.shippingAddress.state,
+                      order.shippingAddress.country,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </p>
+                </div>
               )}
             </div>
           </div>
@@ -136,6 +203,42 @@ export default function AdminOrdersPage() {
           </Button>
         </div>
       )}
+
+      <Dialog open={!!deleting} onOpenChange={(open) => !open && !removing && setDeleting(null)}>
+        <DialogContent className="sm:max-w-md" showCloseButton={!removing}>
+          <DialogHeader>
+            <DialogTitle>Delete order?</DialogTitle>
+            <DialogDescription>
+              This permanently removes{" "}
+              <span className="font-medium text-neutral-900">{deleting?.orderNumber}</span>
+              {deleting?.paymentReference
+                ? " and its payment record from Payments."
+                : "."}{" "}
+              {deleting?.paymentStatus === "SUCCESS"
+                ? "Stock from this sale will be restored."
+                : null}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={removing}
+              onClick={() => setDeleting(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={removing}
+              onClick={onConfirmDelete}
+            >
+              {removing ? "Deleting…" : "Delete order"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

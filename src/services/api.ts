@@ -255,6 +255,11 @@ export async function updateOrderStatus(id: string, status: string) {
   return data;
 }
 
+export async function deleteOrder(id: string) {
+  const { data } = await api.delete<ApiResponse<{ id: string }>>(`/orders/${id}`);
+  return data;
+}
+
 export async function initPayment(provider: "flutterwave" | "korapay", orderId: string) {
   const { data } = await api.post<
     ApiResponse<{ authorizationUrl: string; reference: string }>

@@ -26,6 +26,7 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | null>(null);
 const STORAGE_KEY = "ecomm-cart-v2";
+const PENDING_CLEAR_KEY = "ecomm-cart-pending-clear";
 
 function readLocalCart(): CartItem[] {
   try {
@@ -39,6 +40,30 @@ function readLocalCart(): CartItem[] {
 
 function writeLocalCart(items: CartItem[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
+
+function markPendingClear() {
+  try {
+    sessionStorage.setItem(PENDING_CLEAR_KEY, "1");
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearPendingClear() {
+  try {
+    sessionStorage.removeItem(PENDING_CLEAR_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+function hasPendingClear() {
+  try {
+    return sessionStorage.getItem(PENDING_CLEAR_KEY) === "1";
+  } catch {
+    return false;
+  }
 }
 
 function serializeCart(items: CartItem[]) {
@@ -118,12 +143,47 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       try {
         if (!user) {
+          if (hasPendingClear()) {
+            setItems([]);
+            writeLocalCart([]);
+            clearPendingClear();
+          }
           prevUserId.current = null;
+          return;
+        }
+
+        // Payment success may clear before auth/hydrate finishes — honor that.
+        if (hasPendingClear()) {
+          try {
+            await api.clearServerCart();
+          } catch (err) {
+            console.error("Failed to clear cart:", err);
+          }
+          if (cancelled) return;
+          setItems([]);
+          writeLocalCart([]);
+          clearPendingClear();
+          prevUserId.current = nextUserId;
           return;
         }
 
         const remote = (await api.getCart()).data?.items || [];
         if (cancelled) return;
+
+        // Cleared while getCart was in flight
+        if (hasPendingClear()) {
+          try {
+            await api.clearServerCart();
+          } catch (err) {
+            console.error("Failed to clear cart:", err);
+          }
+          if (cancelled) return;
+          setItems([]);
+          writeLocalCart([]);
+          clearPendingClear();
+          prevUserId.current = nextUserId;
+          return;
+        }
 
         // Guest → logged in: merge guest localStorage into account once
         const loggingIn = previous === null;
@@ -229,13 +289,35 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   }
 
-  function clearCart() {
+  const clearCart = useCallback(() => {
+    skipSync.current = true;
     setItems([]);
     writeLocalCart([]);
-    if (user) {
-      void api.clearServerCart().catch((err) => console.error("Failed to clear cart:", err));
+
+    const hasToken =
+      typeof window !== "undefined" && Boolean(localStorage.getItem("token"));
+
+    if (!hasToken) {
+      clearPendingClear();
+      skipSync.current = false;
+      return;
     }
-  }
+
+    // Logged-in: server may still hold the cart; keep a flag until clear succeeds
+    // so hydrate cannot restore items after a race.
+    markPendingClear();
+    void api
+      .clearServerCart()
+      .then(() => {
+        clearPendingClear();
+      })
+      .catch((err) => {
+        console.error("Failed to clear cart:", err);
+      })
+      .finally(() => {
+        skipSync.current = false;
+      });
+  }, []);
 
   const subtotal = items.reduce((sum, item) => {
     return sum + getProductPrice(item.product, item.variant) * item.quantity;

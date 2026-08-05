@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { PageHead } from "@/components/seo/page-head";
+import { useAuth } from "@/hooks/use-auth";
 import { useCart } from "@/hooks/use-cart";
 import { verifyPayment } from "@/services/api";
 import { buttonVariants } from "@/components/ui/button";
@@ -14,6 +15,7 @@ function queryValue(value: string | string[] | undefined): string {
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
+  const { loading: authLoading } = useAuth();
   const { clearCart } = useCart();
   const clearedRef = useRef(false);
   const provider = queryValue(router.query.provider) || "flutterwave";
@@ -25,15 +27,18 @@ export default function PaymentSuccessPage() {
   const [status, setStatus] = useState<"loading" | "success" | "failed">("loading");
 
   useEffect(() => {
-    if (!router.isReady) return;
+    if (!router.isReady || authLoading) return;
 
     if (!reference) {
       setStatus("failed");
       return;
     }
 
+    let cancelled = false;
+
     verifyPayment(provider, reference, transactionId || undefined)
       .then((res) => {
+        if (cancelled) return;
         if (res.data?.paid) {
           if (!clearedRef.current) {
             clearedRef.current = true;
@@ -44,16 +49,20 @@ export default function PaymentSuccessPage() {
           setStatus("failed");
         }
       })
-      .catch(() => setStatus("failed"));
-    // clearCart is recreated each render; guard with clearedRef instead of depending on it
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router.isReady, provider, reference, transactionId]);
+      .catch(() => {
+        if (!cancelled) setStatus("failed");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router.isReady, authLoading, provider, reference, transactionId, clearCart]);
 
   return (
     <>
       <PageHead title="Payment" />
       <div className="mx-auto flex min-h-[60vh] max-w-lg items-center justify-center px-6 py-20">
-        {status === "loading" || !router.isReady ? (
+        {status === "loading" || !router.isReady || authLoading ? (
           <p className="text-sm text-neutral-500">Confirming payment…</p>
         ) : status === "failed" ? (
           <div className="text-center">
