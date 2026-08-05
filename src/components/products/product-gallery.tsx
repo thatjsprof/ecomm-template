@@ -230,11 +230,15 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
                   data-thumb={index}
                   onClick={() => scrollMainTo(index)}
                   className={cn(
-                    "relative h-20 w-16 shrink-0 overflow-hidden rounded-lg",
-                    activeIndex === index ? "ring-2 ring-neutral-900" : "opacity-80 hover:opacity-100"
+                    "relative h-20 w-16 shrink-0 rounded-lg border-2 p-0.5 transition-opacity",
+                    activeIndex === index
+                      ? "border-neutral-900"
+                      : "border-transparent opacity-80 hover:opacity-100"
                   )}
                 >
-                  <Image src={img} alt="" fill className="object-cover" sizes="64px" />
+                  <span className="relative block size-full overflow-hidden rounded-md">
+                    <Image src={img} alt="" fill className="object-cover" sizes="64px" />
+                  </span>
                 </button>
               ))}
             </div>
@@ -243,8 +247,15 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
       </div>
 
       {lightboxOpen && (
-        <div className="fixed inset-0 z-[100] flex flex-col bg-neutral-950/95 text-white">
-          <div className="flex items-center justify-between px-4 py-3 sm:px-6">
+        <div
+          className="fixed inset-0 z-[100] flex flex-col bg-neutral-950/95 text-white"
+          onClick={() => setLightboxOpen(false)}
+          role="presentation"
+        >
+          <div
+            className="flex items-center justify-between px-4 py-3 sm:px-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <p className="text-sm text-white/70">
               {activeIndex + 1} / {images.length}
             </p>
@@ -272,6 +283,7 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
             <div
               className="relative mx-auto h-[70vh] w-full max-w-5xl transition-transform duration-200"
               style={{ transform: `scale(${lightboxZoom})` }}
+              onClick={(e) => e.stopPropagation()}
             >
               <Image
                 src={current}
@@ -285,7 +297,10 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
           </div>
 
           {images.length > 1 && (
-            <div className="flex items-center justify-center gap-3 pb-8 pt-4">
+            <div
+              className="flex items-center justify-center gap-3 pb-8 pt-4"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 type="button"
                 onClick={() => go(-1)}
