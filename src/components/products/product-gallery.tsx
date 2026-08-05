@@ -252,14 +252,11 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
           onClick={() => setLightboxOpen(false)}
           role="presentation"
         >
-          <div
-            className="flex items-center justify-between px-4 py-3 sm:px-6"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="flex items-center justify-between px-4 py-3 sm:px-6">
             <p className="text-sm text-white/70">
               {activeIndex + 1} / {images.length}
             </p>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
               <button
                 type="button"
                 onClick={() => setLightboxZoom((z) => (z >= 1.75 ? 1 : z + 0.5))}
@@ -280,20 +277,18 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
           </div>
 
           <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-auto px-4">
-            <div
-              className="relative mx-auto h-[70vh] w-full max-w-5xl transition-transform duration-200"
+            {/* Intrinsic size so letterbox around the image closes the lightbox */}
+            <Image
+              src={current}
+              alt={alt}
+              width={1600}
+              height={2000}
+              className="h-auto max-h-[70vh] w-auto max-w-full object-contain transition-transform duration-200"
               style={{ transform: `scale(${lightboxZoom})` }}
+              sizes="100vw"
+              priority
               onClick={(e) => e.stopPropagation()}
-            >
-              <Image
-                src={current}
-                alt={alt}
-                fill
-                className="object-contain"
-                sizes="100vw"
-                priority
-              />
-            </div>
+            />
           </div>
 
           {images.length > 1 && (

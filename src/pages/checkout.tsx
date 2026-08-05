@@ -43,7 +43,7 @@ type FormData = z.infer<typeof schema>;
 export default function CheckoutPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { items, subtotal, clearCart } = useCart();
+  const { items, subtotal } = useCart();
   const [discount, setDiscount] = useState(0);
   const [couponApplied, setCouponApplied] = useState("");
   const [guestCheckout, setGuestCheckout] = useState(false);
@@ -230,7 +230,6 @@ export default function CheckoutPage() {
         throw new Error(paymentRes.message || "Failed to initialize payment");
       }
 
-      clearCart();
       window.location.href = paymentRes.data.authorizationUrl;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Checkout failed");
@@ -439,11 +438,10 @@ export default function CheckoutPage() {
                 {shippingOptions.map((option) => (
                   <label
                     key={option.id}
-                    className={`flex cursor-pointer items-start justify-between gap-4 rounded-xl border px-4 py-4 text-sm transition-colors ${
-                      shippingOptionId === option.id
+                    className={`flex cursor-pointer items-start justify-between gap-4 rounded-xl border px-4 py-4 text-sm transition-colors ${shippingOptionId === option.id
                         ? "border-neutral-900 bg-neutral-50"
                         : "border-neutral-200 hover:border-neutral-400"
-                    }`}
+                      }`}
                   >
                     <span className="flex items-start gap-2">
                       <input
@@ -480,11 +478,10 @@ export default function CheckoutPage() {
               ).map((p) => (
                 <label
                   key={p.value}
-                  className={`cursor-pointer rounded-xl border px-4 py-4 text-sm transition-colors ${
-                    provider === p.value
+                  className={`cursor-pointer rounded-xl border px-4 py-4 text-sm transition-colors ${provider === p.value
                       ? "border-neutral-900 bg-neutral-50"
                       : "border-neutral-200 hover:border-neutral-400"
-                  }`}
+                    }`}
                 >
                   <input
                     type="radio"

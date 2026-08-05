@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { PageHead } from "@/components/seo/page-head";
+import { useCart } from "@/hooks/use-cart";
 import { verifyPayment } from "@/services/api";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,8 @@ function queryValue(value: string | string[] | undefined): string {
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
+  const { clearCart } = useCart();
+  const clearedRef = useRef(false);
   const provider = queryValue(router.query.provider) || "flutterwave";
   const reference =
     queryValue(router.query.tx_ref) ||
@@ -31,9 +34,19 @@ export default function PaymentSuccessPage() {
 
     verifyPayment(provider, reference, transactionId || undefined)
       .then((res) => {
-        setStatus(res.data?.paid ? "success" : "failed");
+        if (res.data?.paid) {
+          if (!clearedRef.current) {
+            clearedRef.current = true;
+            clearCart();
+          }
+          setStatus("success");
+        } else {
+          setStatus("failed");
+        }
       })
       .catch(() => setStatus("failed"));
+    // clearCart is recreated each render; guard with clearedRef instead of depending on it
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.isReady, provider, reference, transactionId]);
 
   return (

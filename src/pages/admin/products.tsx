@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ChevronLeft, ChevronRight, GripVertical } from "lucide-react";
 import {
   createProduct,
   deleteProduct,
@@ -11,6 +12,7 @@ import {
 import type { Category, Pagination, Product, ProductOption } from "@/types";
 import { formatPrice } from "@/utils/format";
 import { productFormErrorMessage, productFormSchema } from "@/lib/product-form";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +38,16 @@ import {
   type VariantRow,
 } from "@/components/admin/product-options-editor";
 
+function moveImage(images: string[], from: number, to: number) {
+  if (from === to || from < 0 || to < 0 || from >= images.length || to >= images.length) {
+    return images;
+  }
+  const next = [...images];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item);
+  return next;
+}
+
 const emptyForm = {
   name: "",
   description: "",
@@ -60,6 +72,7 @@ export default function AdminProductsPage() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [dragImageIndex, setDragImageIndex] = useState<number | null>(null);
 
   async function load(nextPage = page) {
     const [productsRes, categoriesRes] = await Promise.all([
@@ -293,25 +306,87 @@ export default function AdminProductsPage() {
                 <Input type="file" accept="image/*" multiple onChange={onUpload} />
                 {form.images.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {form.images.map((url) => (
+                    {form.images.map((url, index) => (
                       <div
-                        key={url}
-                        className="relative size-20 overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50"
+                        key={`${url}-${index}`}
+                        draggable
+                        onDragStart={() => setDragImageIndex(index)}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = "move";
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (dragImageIndex == null) return;
+                          setForm((prev) => ({
+                            ...prev,
+                            images: moveImage(prev.images, dragImageIndex, index),
+                          }));
+                          setDragImageIndex(null);
+                        }}
+                        onDragEnd={() => setDragImageIndex(null)}
+                        className={cn(
+                          "group relative size-20 cursor-grab overflow-hidden rounded-lg border bg-neutral-50 active:cursor-grabbing",
+                          dragImageIndex === index
+                            ? "border-neutral-900 opacity-60"
+                            : "border-neutral-200"
+                        )}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt="" className="size-full object-cover" />
+                        <img src={url} alt="" className="pointer-events-none size-full object-cover" />
+                        {index === 0 ? (
+                          <span className="pointer-events-none absolute left-1 top-1 rounded bg-black/70 px-1 text-[9px] font-medium uppercase tracking-wide text-white">
+                            Cover
+                          </span>
+                        ) : (
+                          <span className="pointer-events-none absolute left-1 top-1 rounded bg-black/60 p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100">
+                            <GripVertical className="size-3" />
+                          </span>
+                        )}
                         <button
                           type="button"
                           className="absolute right-1 top-1 rounded bg-white/90 px-1.5 text-[10px] text-neutral-700"
                           onClick={() =>
                             setForm((prev) => ({
                               ...prev,
-                              images: prev.images.filter((img) => img !== url),
+                              images: prev.images.filter((_, i) => i !== index),
                             }))
                           }
                         >
                           ×
                         </button>
+                        {form.images.length > 1 && (
+                          <div className="absolute inset-x-0 bottom-0 flex justify-between bg-gradient-to-t from-black/50 to-transparent px-0.5 pb-0.5 pt-3 opacity-0 transition-opacity group-hover:opacity-100">
+                            <button
+                              type="button"
+                              disabled={index === 0}
+                              className="rounded bg-white/90 p-0.5 text-neutral-700 disabled:opacity-30"
+                              aria-label="Move image left"
+                              onClick={() =>
+                                setForm((prev) => ({
+                                  ...prev,
+                                  images: moveImage(prev.images, index, index - 1),
+                                }))
+                              }
+                            >
+                              <ChevronLeft className="size-3" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={index === form.images.length - 1}
+                              className="rounded bg-white/90 p-0.5 text-neutral-700 disabled:opacity-30"
+                              aria-label="Move image right"
+                              onClick={() =>
+                                setForm((prev) => ({
+                                  ...prev,
+                                  images: moveImage(prev.images, index, index + 1),
+                                }))
+                              }
+                            >
+                              <ChevronRight className="size-3" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

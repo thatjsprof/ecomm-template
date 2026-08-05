@@ -9,7 +9,7 @@ export const siteConfig = {
   /** Display name (titles, copyright, admin) */
   name: "Alurd",
   /** Logo / hero text (often all-caps) */
-  nameDisplay: "Alurd",
+  nameDisplay: "House of Alurd",
   /** Short title fragment e.g. "Atelier — Modern Essentials" */
   tagline: "Modern Essentials",
   /** Meta description / OG */

@@ -7,6 +7,7 @@ import type {
   NewsletterSubscriber,
   Order,
   Pagination,
+  PaymentStatus,
   Product,
   SavedAddress,
   ShippingOption,
@@ -214,6 +215,38 @@ export async function getAdminOrders(page = 1, status?: string) {
     "/orders",
     { params: { page, status } }
   );
+  return data;
+}
+
+export async function getPaymentStats() {
+  const { data } = await api.get<
+    ApiResponse<{
+      revenueTotal: number;
+      revenueThisMonth: number;
+      paidOrders: number;
+      paidOrdersThisMonth: number;
+    }>
+  >("/payments/admin/stats");
+  return data;
+}
+
+export async function getAdminPayments(page = 1) {
+  const { data } = await api.get<
+    ApiResponse<{
+      payments: Array<{
+        id: string;
+        orderNumber: string;
+        customerName: string;
+        customerEmail: string;
+        total: string | number;
+        paymentProvider: string | null;
+        paymentReference: string | null;
+        paymentStatus: PaymentStatus;
+        createdAt: string;
+      }>;
+      pagination: Pagination;
+    }>
+  >("/payments/admin", { params: { page } });
   return data;
 }
 
