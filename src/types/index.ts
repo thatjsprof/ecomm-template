@@ -26,6 +26,16 @@ export interface Category {
   _count?: { products: number };
 }
 
+export interface ProductOptionValue {
+  value: string;
+  image?: string | null;
+}
+
+export interface ProductOption {
+  name: string;
+  values: ProductOptionValue[];
+}
+
 export interface ProductVariant {
   id: string;
   productId: string;
@@ -47,6 +57,7 @@ export interface Product {
   stock: number;
   sku: string;
   images: string[];
+  optionConfig?: ProductOption[] | null;
   featured: boolean;
   newArrival: boolean;
   active: boolean;

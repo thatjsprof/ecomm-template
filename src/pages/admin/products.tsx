@@ -8,7 +8,7 @@ import {
   updateProduct,
   uploadImage,
 } from "@/services/api";
-import type { Category, Pagination, Product } from "@/types";
+import type { Category, Pagination, Product, ProductOption } from "@/types";
 import { formatPrice } from "@/utils/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,132 +29,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-
-type OptionGroup = {
-  name: string;
-  /** Comma-separated values, e.g. "12, 13" */
-  valuesText: string;
-};
-
-type VariantRow = {
-  id?: string;
-  attributes: Record<string, string>;
-  sku: string;
-  stock: string;
-  price: string;
-  salePrice: string;
-};
-
-function parseOptionValues(text: string): string[] {
-  return text
-    .split(",")
-    .map((v) => v.trim())
-    .filter(Boolean);
-}
-
-function attributeSignature(attributes: Record<string, string>): string {
-  return Object.keys(attributes)
-    .sort()
-    .map((key) => `${key}=${attributes[key]}`)
-    .join("|");
-}
-
-function valuesSignature(attributes: Record<string, string>): string {
-  return Object.values(attributes)
-    .map((value) => value.trim().toLowerCase())
-    .sort()
-    .join("|");
-}
-
-function findMatchingVariant(
-  attributes: Record<string, string>,
-  previous: VariantRow[],
-  used: Set<number>
-): VariantRow | undefined {
-  const exact = attributeSignature(attributes);
-  const byValues = valuesSignature(attributes);
-
-  const exactIndex = previous.findIndex(
-    (v, i) => !used.has(i) && attributeSignature(v.attributes) === exact
-  );
-  if (exactIndex >= 0) {
-    used.add(exactIndex);
-    return previous[exactIndex];
-  }
-
-  const valuesIndex = previous.findIndex(
-    (v, i) => !used.has(i) && valuesSignature(v.attributes) === byValues
-  );
-  if (valuesIndex >= 0) {
-    used.add(valuesIndex);
-    return previous[valuesIndex];
-  }
-
-  return undefined;
-}
-
-function formatAttributes(attributes: Record<string, string>): string {
-  return Object.entries(attributes)
-    .map(([key, value]) => `${key}: ${value}`)
-    .join(" / ");
-}
-
-function cartesianCombinations(
-  options: Array<{ name: string; values: string[] }>
-): Record<string, string>[] {
-  const usable = options.filter((o) => o.name && o.values.length > 0);
-  if (usable.length === 0) return [];
-
-  return usable.reduce<Record<string, string>[]>((acc, option) => {
-    if (acc.length === 0) {
-      return option.values.map((value) => ({ [option.name]: value }));
-    }
-    return acc.flatMap((combo) =>
-      option.values.map((value) => ({ ...combo, [option.name]: value }))
-    );
-  }, []);
-}
-
-function skuSlug(value: string): string {
-  return value
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^A-Z0-9-_]/g, "");
-}
-
-function buildSku(baseSku: string, attributes: Record<string, string>): string {
-  const parts = Object.values(attributes).map(skuSlug).filter(Boolean);
-  const base = baseSku.trim();
-  if (base && parts.length) return `${base}-${parts.join("-")}`;
-  if (parts.length) return parts.join("-");
-  return base;
-}
-
-function optionsFromVariants(
-  variants: Array<{ attributes?: Record<string, string> | null }>
-): OptionGroup[] {
-  const order: string[] = [];
-  const values = new Map<string, string[]>();
-
-  for (const variant of variants) {
-    for (const [key, value] of Object.entries(variant.attributes || {})) {
-      if (!values.has(key)) {
-        order.push(key);
-        values.set(key, []);
-      }
-      const list = values.get(key)!;
-      if (!list.includes(value)) list.push(value);
-    }
-  }
-
-  return order.map((name) => ({
-    name,
-    valuesText: (values.get(name) || []).join(", "),
-  }));
-}
-
-const emptyOption = (): OptionGroup => ({ name: "", valuesText: "" });
+import {
+  optionsFromVariants,
+  ProductOptionsEditor,
+  type VariantRow,
+} from "@/components/admin/product-options-editor";
 
 const emptyForm = {
   name: "",
@@ -168,7 +47,7 @@ const emptyForm = {
   newArrival: false,
   active: true,
   images: [] as string[],
-  options: [] as OptionGroup[],
+  options: [] as ProductOption[],
   variants: [] as VariantRow[],
 };
 
@@ -218,7 +97,7 @@ export default function AdminProductsPage() {
       newArrival: product.newArrival,
       active: product.active,
       images: product.images || [],
-      options: optionsFromVariants(existingVariants),
+      options: optionsFromVariants(existingVariants, product.optionConfig),
       variants: existingVariants.map((v) => ({
         id: v.id,
         attributes: { ...(v.attributes || {}) },
@@ -231,76 +110,44 @@ export default function AdminProductsPage() {
     setOpen(true);
   }
 
-  function updateOption(index: number, patch: Partial<OptionGroup>) {
-    setForm((prev) => ({
-      ...prev,
-      options: prev.options.map((o, i) => (i === index ? { ...o, ...patch } : o)),
-    }));
-  }
-
-  function updateVariant(index: number, patch: Partial<VariantRow>) {
-    setForm((prev) => ({
-      ...prev,
-      variants: prev.variants.map((v, i) => (i === index ? { ...v, ...patch } : v)),
-    }));
-  }
-
-  function generateCombinations() {
-    setForm((prev) => {
-      const optionDefs = prev.options
-        .map((o) => ({
-          name: o.name.trim(),
-          values: parseOptionValues(o.valuesText),
-        }))
-        .filter((o) => o.name && o.values.length > 0);
-
-      if (optionDefs.length === 0) {
-        toast.error("Add at least one option with values (e.g. Size → 12, 13)");
-        return prev;
-      }
-
-      const combos = cartesianCombinations(optionDefs);
-      const used = new Set<number>();
-
-      const variants: VariantRow[] = combos.map((attributes) => {
-        const existing = findMatchingVariant(attributes, prev.variants, used);
-        if (existing) {
-          return {
-            ...existing,
-            attributes,
-          };
-        }
-        return {
-          attributes,
-          sku: buildSku(prev.sku, attributes),
-          stock: prev.stock || "0",
-          price: prev.price || "",
-          salePrice: prev.salePrice || "",
-        };
-      });
-
-      toast.success(`Generated ${variants.length} combination${variants.length === 1 ? "" : "s"}`);
-      return { ...prev, variants };
-    });
-  }
-
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
     try {
-      const res = await uploadImage(file);
-      if (res.data?.url) {
-        setForm((prev) => ({ ...prev, images: [...prev.images, res.data!.url] }));
-        toast.success("Image uploaded");
+      const uploaded: string[] = [];
+      for (const file of files) {
+        const res = await uploadImage(file);
+        if (res.data?.url) uploaded.push(res.data.url);
+      }
+      if (uploaded.length) {
+        setForm((prev) => ({ ...prev, images: [...prev.images, ...uploaded] }));
+        toast.success(
+          uploaded.length === 1 ? "Image uploaded" : `${uploaded.length} images uploaded`
+        );
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      e.target.value = "";
     }
   }
 
   async function onSave() {
     setSaving(true);
     try {
+      const optionConfig = form.options
+        .map((o) => ({
+          name: o.name.trim(),
+          values: o.values
+            .map((v) => ({
+              value: v.value.trim(),
+              image: v.image || null,
+            }))
+            .filter((v) => v.value),
+        }))
+        .filter((o) => o.name && o.values.length > 0);
+
       const payload = {
         name: form.name,
         description: form.description,
@@ -313,6 +160,7 @@ export default function AdminProductsPage() {
         newArrival: form.newArrival,
         active: form.active,
         images: form.images,
+        optionConfig: optionConfig.length ? optionConfig : null,
         variants: form.variants
           .filter((v) => v.sku.trim())
           .map((v) => ({
@@ -444,7 +292,7 @@ export default function AdminProductsPage() {
               </div>
               <div className="space-y-1">
                 <Label>Images</Label>
-                <Input type="file" accept="image/*" onChange={onUpload} />
+                <Input type="file" accept="image/*" multiple onChange={onUpload} />
                 {form.images.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-2">
                     {form.images.map((url) => (
@@ -472,138 +320,18 @@ export default function AdminProductsPage() {
                 )}
               </div>
 
-              <div className="space-y-3 border-t border-neutral-100 pt-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium">Variant options</p>
-                    <p className="text-xs text-neutral-500">
-                      Define options first (e.g. Size → 12, 13 and Color → Black, Blue), then generate
-                      every combination so you can set stock/price per row.
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() =>
-                      setForm((prev) => ({
-                        ...prev,
-                        options: [...prev.options, emptyOption()],
-                      }))
-                    }
-                  >
-                    Add option
-                  </Button>
-                </div>
-
-                {form.options.map((option, index) => (
-                  <div
-                    key={index}
-                    className="grid grid-cols-[1fr_2fr_auto] gap-2 rounded-xl border border-neutral-200 p-3"
-                  >
-                    <Input
-                      placeholder="Option name (Size)"
-                      value={option.name}
-                      onChange={(e) => updateOption(index, { name: e.target.value })}
-                    />
-                    <Input
-                      placeholder="Values (12, 13)"
-                      value={option.valuesText}
-                      onChange={(e) => updateOption(index, { valuesText: e.target.value })}
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() =>
-                        setForm((prev) => ({
-                          ...prev,
-                          options: prev.options.filter((_, i) => i !== index),
-                        }))
-                      }
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                ))}
-
-                {form.options.length > 0 && (
-                  <Button type="button" size="sm" onClick={generateCombinations}>
-                    Generate combinations
-                  </Button>
-                )}
-
-                {form.variants.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">
-                      Combinations ({form.variants.length})
-                    </p>
-                    <div className="overflow-x-auto rounded-xl border border-neutral-200">
-                      <table className="w-full min-w-[560px] text-left text-xs">
-                        <thead className="border-b border-neutral-100 bg-neutral-50 text-neutral-500">
-                          <tr>
-                            <th className="px-3 py-2 font-medium">Combination</th>
-                            <th className="px-3 py-2 font-medium">SKU</th>
-                            <th className="px-3 py-2 font-medium">Stock</th>
-                            <th className="px-3 py-2 font-medium">Price</th>
-                            <th className="px-3 py-2 font-medium">Sale</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {form.variants.map((variant, index) => (
-                            <tr key={attributeSignature(variant.attributes)} className="border-b border-neutral-50">
-                              <td className="px-3 py-2 font-medium text-neutral-800">
-                                {formatAttributes(variant.attributes)}
-                              </td>
-                              <td className="px-3 py-2">
-                                <Input
-                                  className="h-8 text-xs"
-                                  value={variant.sku}
-                                  onChange={(e) => updateVariant(index, { sku: e.target.value })}
-                                />
-                              </td>
-                              <td className="px-3 py-2">
-                                <Input
-                                  className="h-8 text-xs"
-                                  type="number"
-                                  value={variant.stock}
-                                  onChange={(e) => updateVariant(index, { stock: e.target.value })}
-                                />
-                              </td>
-                              <td className="px-3 py-2">
-                                <Input
-                                  className="h-8 text-xs"
-                                  type="number"
-                                  placeholder="Base"
-                                  value={variant.price}
-                                  onChange={(e) => updateVariant(index, { price: e.target.value })}
-                                />
-                              </td>
-                              <td className="px-3 py-2">
-                                <Input
-                                  className="h-8 text-xs"
-                                  type="number"
-                                  placeholder="—"
-                                  value={variant.salePrice}
-                                  onChange={(e) =>
-                                    updateVariant(index, { salePrice: e.target.value })
-                                  }
-                                />
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    <p className="text-xs text-neutral-500">
-                      New rows start with the product base stock and price (not split across
-                      combinations). Regenerating keeps your entered stock/price/SKU when the
-                      values still match — renaming an option (e.g. Size → Shoe size) won’t wipe
-                      them.
-                    </p>
-                  </div>
-                )}
-              </div>
+              <ProductOptionsEditor
+                options={form.options}
+                variants={form.variants}
+                images={form.images}
+                baseSku={form.sku}
+                baseStock={form.stock}
+                basePrice={form.price}
+                baseSalePrice={form.salePrice}
+                onOptionsChange={(options) => setForm((prev) => ({ ...prev, options }))}
+                onVariantsChange={(variants) => setForm((prev) => ({ ...prev, variants }))}
+                onImagesChange={(images) => setForm((prev) => ({ ...prev, images }))}
+              />
 
               <div className="flex flex-wrap gap-4 pt-2">
                 <label className="flex items-center gap-2 text-sm">

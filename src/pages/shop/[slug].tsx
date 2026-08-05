@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
 import { ProductCard } from "@/components/products/product-card";
+import { ProductGallery } from "@/components/products/product-gallery";
 import { PageHead } from "@/components/seo/page-head";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
@@ -10,13 +10,31 @@ import { getProduct } from "@/services/api";
 import type { Product, ProductVariant } from "@/types";
 import { formatPrice, getProductPrice } from "@/utils/format";
 
+function imageForSelection(
+  product: Product,
+  selectedOptions: Record<string, string>
+): string | null {
+  const config = product.optionConfig || [];
+  // Prefer the most recently meaningful option image — walk config in reverse so
+  // Color (often last) wins over Size when both have images.
+  for (let i = config.length - 1; i >= 0; i -= 1) {
+    const option = config[i];
+    const selected = selectedOptions[option.name];
+    if (!selected) continue;
+    const match = option.values.find((v) => v.value === selected && v.image);
+    if (match?.image && product.images.includes(match.image)) {
+      return match.image;
+    }
+  }
+  return null;
+}
+
 export default function ProductDetailPage() {
   const router = useRouter();
   const slug = typeof router.query.slug === "string" ? router.query.slug : "";
   const { addItem } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
-  const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -29,7 +47,6 @@ export default function ProductDetailPage() {
         const next = res.data?.product || null;
         setProduct(next);
         setRelated(res.data?.related || []);
-        setActiveImage(0);
         setQuantity(1);
 
         const activeVariants = (next?.variants || []).filter((v) => v.active !== false);
@@ -46,10 +63,13 @@ export default function ProductDetailPage() {
   );
 
   const attributeKeys = useMemo(() => {
+    if (product?.optionConfig?.length) {
+      return product.optionConfig.map((o) => o.name).filter(Boolean);
+    }
     const keys = new Set<string>();
     variants.forEach((v) => Object.keys(v.attributes || {}).forEach((k) => keys.add(k)));
     return Array.from(keys);
-  }, [variants]);
+  }, [product, variants]);
 
   const selectedVariant: ProductVariant | null = useMemo(() => {
     if (!variants.length) return null;
@@ -62,13 +82,21 @@ export default function ProductDetailPage() {
     );
   }, [variants, attributeKeys, selectedOptions]);
 
+  const focusImageUrl = useMemo(() => {
+    if (!product) return null;
+    return imageForSelection(product, selectedOptions);
+  }, [product, selectedOptions]);
+
   function optionValues(key: string): string[] {
+    const fromConfig = product?.optionConfig?.find((o) => o.name === key);
+    if (fromConfig?.values?.length) {
+      return fromConfig.values.map((v) => v.value).filter(Boolean);
+    }
     return Array.from(
       new Set(variants.map((v) => v.attributes?.[key]).filter(Boolean) as string[])
     );
   }
 
-  /** True when every variant that has this option value is out of stock */
   function isOptionSoldOut(key: string, value: string): boolean {
     const matches = variants.filter((v) => v.attributes?.[key] === value);
     if (matches.length === 0) return true;
@@ -76,7 +104,6 @@ export default function ProductDetailPage() {
   }
 
   function selectAttribute(key: string, value: string) {
-    // Only change this attribute — never rewrite the others
     setSelectedOptions((prev) => ({ ...prev, [key]: value }));
     setQuantity(1);
   }
@@ -115,40 +142,11 @@ export default function ProductDetailPage() {
       <PageHead title={product.name} />
       <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-2">
-          <div>
-            <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-neutral-100 shadow-sm">
-              {images[activeImage] ? (
-                <Image
-                  src={images[activeImage]}
-                  alt={product.name}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  priority
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-                  No image
-                </div>
-              )}
-            </div>
-            {images.length > 1 && (
-              <div className="mt-4 flex gap-3">
-                {images.map((img, index) => (
-                  <button
-                    key={img}
-                    type="button"
-                    onClick={() => setActiveImage(index)}
-                    className={`relative h-20 w-16 overflow-hidden rounded-lg ${
-                      activeImage === index ? "ring-2 ring-neutral-900" : ""
-                    }`}
-                  >
-                    <Image src={img} alt="" fill className="object-cover" sizes="64px" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <ProductGallery
+            images={images}
+            alt={product.name}
+            focusImageUrl={focusImageUrl}
+          />
 
           <div className="flex flex-col justify-center">
             <p className="text-xs uppercase tracking-[0.2em] text-neutral-400">
@@ -178,6 +176,9 @@ export default function ProductDetailPage() {
                     {values.map((value) => {
                       const selected = selectedValue === value;
                       const soldOut = isOptionSoldOut(key, value);
+                      const optionImage = product.optionConfig
+                        ?.find((o) => o.name === key)
+                        ?.values.find((v) => v.value === value)?.image;
 
                       return (
                         <button
@@ -185,7 +186,7 @@ export default function ProductDetailPage() {
                           type="button"
                           onClick={() => selectAttribute(key, value)}
                           aria-pressed={selected}
-                          className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors ${
                             selected
                               ? soldOut
                                 ? "border-neutral-400 bg-neutral-400 text-white line-through"
@@ -195,6 +196,14 @@ export default function ProductDetailPage() {
                                 : "border-neutral-200 text-neutral-700 hover:border-neutral-400"
                           }`}
                         >
+                          {optionImage ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={optionImage}
+                              alt=""
+                              className="size-5 rounded-full object-cover"
+                            />
+                          ) : null}
                           {value}
                         </button>
                       );
