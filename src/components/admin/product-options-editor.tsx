@@ -1,12 +1,19 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2, Upload, X } from "lucide-react";
 import { uploadImage } from "@/services/api";
 import type { ProductOption } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 export type VariantRow = {
   id?: string;
@@ -198,6 +205,13 @@ export function ProductOptionsEditor({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const variantsRef = useRef(variants);
   variantsRef.current = variants;
+  const [imageTarget, setImageTarget] = useState<{
+    optionIndex: number;
+    valueIndex: number;
+  } | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-generate combinations when option names/values change (debounced)
   useEffect(() => {
@@ -245,17 +259,44 @@ export function ProductOptionsEditor({
     onVariantsChange(variants.map((v, i) => (i === index ? { ...v, ...patch } : v)));
   }
 
-  async function uploadValueImage(optionIndex: number, valueIndex: number, file: File) {
+  async function attachFiles(files: FileList | File[]) {
+    if (!imageTarget) return;
+    const list = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (list.length === 0) {
+      toast.error("Choose an image file");
+      return;
+    }
+
+    setUploading(true);
     try {
-      const res = await uploadImage(file);
-      const url = res.data?.url;
-      if (!url) throw new Error("Upload failed");
-      if (!images.includes(url)) onImagesChange([...images, url]);
-      updateOptionValue(optionIndex, valueIndex, { image: url });
-      toast.success("Image attached");
+      const uploaded: string[] = [];
+      for (const file of list) {
+        const res = await uploadImage(file);
+        if (res.data?.url) uploaded.push(res.data.url);
+      }
+      if (!uploaded.length) throw new Error("Upload failed");
+
+      const nextImages = [...images];
+      for (const url of uploaded) {
+        if (!nextImages.includes(url)) nextImages.push(url);
+      }
+      onImagesChange(nextImages);
+      updateOptionValue(imageTarget.optionIndex, imageTarget.valueIndex, {
+        image: uploaded[0],
+      });
+      toast.success(uploaded.length === 1 ? "Image attached" : "Images uploaded");
+      setImageTarget(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
     }
+  }
+
+  function selectExisting(url: string) {
+    if (!imageTarget) return;
+    updateOptionValue(imageTarget.optionIndex, imageTarget.valueIndex, { image: url });
+    setImageTarget(null);
   }
 
   const namedOptions = options.filter((o) => o.name.trim());
@@ -322,82 +363,67 @@ export function ProductOptionsEditor({
                 Values
               </p>
               {option.values.map((entry, valueIndex) => (
-                <div
-                  key={valueIndex}
-                  className="flex flex-wrap items-start gap-2 rounded-lg border border-neutral-100 bg-neutral-50/80 p-2"
-                >
+                <div key={valueIndex} className="flex items-stretch gap-2">
                   <Input
-                    className="min-w-[140px] flex-1 bg-white"
+                    className="h-20 flex-1 bg-white"
                     placeholder="Value"
                     value={entry.value}
                     onChange={(e) =>
                       updateOptionValue(optionIndex, valueIndex, { value: e.target.value })
                     }
                   />
-                  <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setImageTarget({ optionIndex, valueIndex })}
+                    className={cn(
+                      "relative h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-dashed border-neutral-300 bg-neutral-50 text-center transition-colors hover:border-neutral-400 hover:bg-white",
+                      entry.image && "border-solid border-neutral-200 p-0"
+                    )}
+                  >
                     {entry.image ? (
-                      <div className="relative size-14 overflow-hidden rounded-md border border-neutral-200 bg-white">
+                      <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={entry.image} alt="" className="size-full object-cover" />
-                        <button
-                          type="button"
-                          className="absolute right-0.5 top-0.5 rounded bg-white/90 px-1 text-[10px]"
-                          onClick={() =>
-                            updateOptionValue(optionIndex, valueIndex, { image: null })
-                          }
-                        >
-                          ×
-                        </button>
-                      </div>
+                        <span className="absolute inset-x-0 bottom-0 bg-black/50 py-0.5 text-[9px] text-white">
+                          Change
+                        </span>
+                      </>
                     ) : (
-                      <label className="flex size-14 cursor-pointer flex-col items-center justify-center rounded-md border border-dashed border-neutral-300 bg-white text-center text-[9px] leading-tight text-neutral-500 hover:border-neutral-400">
+                      <span className="flex h-full flex-col items-center justify-center px-1 text-[10px] leading-tight text-neutral-500">
                         Click to
                         <br />
-                        add image
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) void uploadValueImage(optionIndex, valueIndex, file);
-                            e.target.value = "";
-                          }}
-                        />
-                      </label>
+                        Add Image
+                      </span>
                     )}
-                    {images.length > 0 && (
-                      <select
-                        className="h-9 max-w-[140px] rounded-md border border-neutral-200 bg-white px-2 text-xs"
-                        value={entry.image || ""}
-                        onChange={(e) =>
-                          updateOptionValue(optionIndex, valueIndex, {
-                            image: e.target.value || null,
-                          })
-                        }
-                      >
-                        <option value="">From product images…</option>
-                        {images.map((url) => (
-                          <option key={url} value={url}>
-                            {url.split("/").pop()}
-                          </option>
-                        ))}
-                      </select>
-                    )}
+                  </button>
+                  {entry.image && (
                     <Button
                       type="button"
                       size="sm"
                       variant="ghost"
-                      disabled={option.values.length <= 1}
+                      className="h-20 px-2"
                       onClick={() =>
-                        updateOption(optionIndex, {
-                          values: option.values.filter((_, i) => i !== valueIndex),
-                        })
+                        updateOptionValue(optionIndex, valueIndex, { image: null })
                       }
+                      aria-label="Remove image"
                     >
                       <X className="size-4" />
                     </Button>
-                  </div>
+                  )}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-20 px-2"
+                    disabled={option.values.length <= 1}
+                    onClick={() =>
+                      updateOption(optionIndex, {
+                        values: option.values.filter((_, i) => i !== valueIndex),
+                      })
+                    }
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
                 </div>
               ))}
               <button
@@ -484,6 +510,82 @@ export function ProductOptionsEditor({
           </div>
         )}
       </div>
+
+      <Dialog
+        open={imageTarget != null}
+        onOpenChange={(open) => {
+          if (!open) setImageTarget(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Upload Files</DialogTitle>
+          </DialogHeader>
+
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => fileInputRef.current?.click()}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              setDragging(false);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              if (e.dataTransfer.files?.length) void attachFiles(e.dataTransfer.files);
+            }}
+            className={cn(
+              "flex min-h-44 w-full flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-neutral-300 bg-neutral-50 px-6 py-10 text-center transition-colors",
+              dragging && "border-neutral-900 bg-neutral-100",
+              uploading && "opacity-60"
+            )}
+          >
+            <Upload className="size-8 text-neutral-400" />
+            <p className="text-sm text-neutral-600">
+              {uploading ? "Uploading…" : "Click here or drag and drop to upload files."}
+            </p>
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files?.length) void attachFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+
+          {images.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-sm font-medium text-neutral-800">Choose from Existing</p>
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                {images.map((url) => (
+                  <button
+                    key={url}
+                    type="button"
+                    onClick={() => selectExisting(url)}
+                    className="relative aspect-square overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50 hover:ring-2 hover:ring-neutral-900"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt="" className="size-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
