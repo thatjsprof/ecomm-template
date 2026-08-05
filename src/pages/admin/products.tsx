@@ -42,7 +42,6 @@ const emptyForm = {
   price: "",
   salePrice: "",
   stock: "0",
-  sku: "",
   categoryId: "",
   featured: false,
   newArrival: false,
@@ -92,7 +91,6 @@ export default function AdminProductsPage() {
       price: String(product.price),
       salePrice: product.salePrice != null ? String(product.salePrice) : "",
       stock: String(product.stock),
-      sku: product.sku,
       categoryId: product.categoryId,
       featured: product.featured,
       newArrival: product.newArrival,
@@ -155,7 +153,6 @@ export default function AdminProductsPage() {
         price: form.price,
         salePrice: form.salePrice,
         stock: form.stock,
-        sku: form.sku,
         categoryId: form.categoryId,
         featured: form.featured,
         newArrival: form.newArrival,
@@ -269,15 +266,6 @@ export default function AdminProductsPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>Base SKU</Label>
-                  <Input
-                    value={form.sku}
-                    onChange={(e) => setForm((prev) => ({ ...prev, sku: e.target.value }))}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
                   <Label>Category</Label>
                   <Select
                     value={form.categoryId || null}
@@ -334,7 +322,6 @@ export default function AdminProductsPage() {
                 options={form.options}
                 variants={form.variants}
                 images={form.images}
-                baseSku={form.sku}
                 baseStock={form.stock}
                 basePrice={form.price}
                 baseSalePrice={form.salePrice}

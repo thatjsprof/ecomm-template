@@ -10,25 +10,6 @@ import { getProduct } from "@/services/api";
 import type { Product, ProductVariant } from "@/types";
 import { formatPrice, getProductPrice } from "@/utils/format";
 
-function imageForSelection(
-  product: Product,
-  selectedOptions: Record<string, string>
-): string | null {
-  const config = product.optionConfig || [];
-  // Prefer the most recently meaningful option image — walk config in reverse so
-  // Color (often last) wins over Size when both have images.
-  for (let i = config.length - 1; i >= 0; i -= 1) {
-    const option = config[i];
-    const selected = selectedOptions[option.name];
-    if (!selected) continue;
-    const match = option.values.find((v) => v.value === selected && v.image);
-    if (match?.image && product.images.includes(match.image)) {
-      return match.image;
-    }
-  }
-  return null;
-}
-
 export default function ProductDetailPage() {
   const router = useRouter();
   const slug = typeof router.query.slug === "string" ? router.query.slug : "";
@@ -37,6 +18,7 @@ export default function ProductDetailPage() {
   const [related, setRelated] = useState<Product[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+  const [focusImageUrl, setFocusImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,6 +35,7 @@ export default function ProductDetailPage() {
         const initial =
           activeVariants.find((v) => v.stock > 0) || activeVariants[0] || null;
         setSelectedOptions(initial?.attributes ? { ...initial.attributes } : {});
+        setFocusImageUrl(null);
       })
       .finally(() => setLoading(false));
   }, [router.isReady, slug]);
@@ -82,11 +65,6 @@ export default function ProductDetailPage() {
     );
   }, [variants, attributeKeys, selectedOptions]);
 
-  const focusImageUrl = useMemo(() => {
-    if (!product) return null;
-    return imageForSelection(product, selectedOptions);
-  }, [product, selectedOptions]);
-
   function optionValues(key: string): string[] {
     const fromConfig = product?.optionConfig?.find((o) => o.name === key);
     if (fromConfig?.values?.length) {
@@ -106,6 +84,13 @@ export default function ProductDetailPage() {
   function selectAttribute(key: string, value: string) {
     setSelectedOptions((prev) => ({ ...prev, [key]: value }));
     setQuantity(1);
+
+    const image = product?.optionConfig
+      ?.find((o) => o.name === key)
+      ?.values.find((v) => v.value === value)?.image;
+    if (!image) return;
+    setFocusImageUrl(null);
+    requestAnimationFrame(() => setFocusImageUrl(image));
   }
 
   if (loading) {
@@ -186,15 +171,14 @@ export default function ProductDetailPage() {
                           type="button"
                           onClick={() => selectAttribute(key, value)}
                           aria-pressed={selected}
-                          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors ${
-                            selected
+                          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors ${selected
                               ? soldOut
                                 ? "border-neutral-400 bg-neutral-400 text-white line-through"
                                 : "border-neutral-900 bg-neutral-900 text-white"
                               : soldOut
                                 ? "border-neutral-200 text-neutral-300 line-through"
                                 : "border-neutral-200 text-neutral-700 hover:border-neutral-400"
-                          }`}
+                            }`}
                         >
                           {optionImage ? (
                             // eslint-disable-next-line @next/next/no-img-element

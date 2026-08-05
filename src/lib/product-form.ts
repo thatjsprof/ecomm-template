@@ -24,7 +24,6 @@ export const productFormSchema = z.object({
     .refine((v) => Number.isFinite(v) && v >= 0 && Number.isInteger(v), {
       message: "Stock cannot be negative",
     }),
-  sku: z.string().trim().min(1, "SKU is required"),
   categoryId: z.string().min(1, "Category is required"),
   featured: z.boolean(),
   newArrival: z.boolean(),

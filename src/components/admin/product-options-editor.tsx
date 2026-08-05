@@ -91,12 +91,9 @@ function skuSlug(value: string): string {
     .replace(/[^A-Z0-9-_]/g, "");
 }
 
-function buildSku(baseSku: string, attributes: Record<string, string>): string {
+function buildSku(attributes: Record<string, string>): string {
   const parts = Object.values(attributes).map(skuSlug).filter(Boolean);
-  const base = baseSku.trim();
-  if (base && parts.length) return `${base}-${parts.join("-")}`;
-  if (parts.length) return parts.join("-");
-  return base;
+  return parts.join("-") || `VAR-${Date.now().toString(36).toUpperCase()}`;
 }
 
 export function formatAttributes(attributes: Record<string, string>): string {
@@ -108,7 +105,6 @@ export function formatAttributes(attributes: Record<string, string>): string {
 export function buildVariantsFromOptions(params: {
   options: ProductOption[];
   previous: VariantRow[];
-  baseSku: string;
   baseStock: string;
   basePrice: string;
   baseSalePrice: string;
@@ -130,7 +126,7 @@ export function buildVariantsFromOptions(params: {
     }
     return {
       attributes,
-      sku: buildSku(params.baseSku, attributes),
+      sku: buildSku(attributes),
       stock: params.baseStock || "0",
       price: params.basePrice || "",
       salePrice: params.baseSalePrice || "",
@@ -176,7 +172,6 @@ interface ProductOptionsEditorProps {
   options: ProductOption[];
   variants: VariantRow[];
   images: string[];
-  baseSku: string;
   baseStock: string;
   basePrice: string;
   baseSalePrice: string;
@@ -189,7 +184,6 @@ export function ProductOptionsEditor({
   options,
   variants,
   images,
-  baseSku,
   baseStock,
   basePrice,
   baseSalePrice,
@@ -229,7 +223,6 @@ export function ProductOptionsEditor({
       const next = buildVariantsFromOptions({
         options,
         previous: variantsRef.current,
-        baseSku,
         baseStock,
         basePrice,
         baseSalePrice,
@@ -242,7 +235,7 @@ export function ProductOptionsEditor({
     };
     // Intentionally omit variants — we read latest via ref to preserve edits
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, baseSku, baseStock, basePrice, baseSalePrice]);
+  }, [options, baseStock, basePrice, baseSalePrice]);
 
   function updateOption(index: number, patch: Partial<ProductOption>) {
     onOptionsChange(options.map((o, i) => (i === index ? { ...o, ...patch } : o)));

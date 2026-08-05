@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Expand, ZoomIn, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,8 +8,16 @@ import { cn } from "@/lib/utils";
 interface ProductGalleryProps {
   images: string[];
   alt: string;
-  /** When set, scroll/select this image if it exists in `images` */
   focusImageUrl?: string | null;
+}
+
+function imageIndex(images: string[], url: string | null | undefined): number {
+  if (!url) return -1;
+  const exact = images.indexOf(url);
+  if (exact >= 0) return exact;
+  return images.findIndex(
+    (img) => img === url || img.split("?")[0] === url.split("?")[0]
+  );
 }
 
 export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryProps) {
@@ -17,20 +25,53 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxZoom, setLightboxZoom] = useState(1);
   const [hoverNav, setHoverNav] = useState(false);
+  const mainRef = useRef<HTMLDivElement>(null);
   const thumbRef = useRef<HTMLDivElement>(null);
   const [thumbOverflow, setThumbOverflow] = useState({ left: false, right: false });
+  const scrollingRef = useRef(false);
 
+  const scrollMainTo = useCallback((index: number, behavior: ScrollBehavior = "smooth") => {
+    const track = mainRef.current;
+    if (!track || images.length === 0) return;
+    const clamped = ((index % images.length) + images.length) % images.length;
+    const slide = track.querySelector<HTMLElement>(`[data-slide="${clamped}"]`);
+    if (!slide) return;
+
+    scrollingRef.current = true;
+    setActiveIndex(clamped);
+    track.scrollTo({ left: slide.offsetLeft, behavior });
+    window.setTimeout(() => {
+      scrollingRef.current = false;
+    }, behavior === "smooth" ? 450 : 50);
+  }, [images.length]);
+
+  // Variant image → scroll main carousel
   useEffect(() => {
-    if (!focusImageUrl || images.length === 0) return;
-    const index = images.indexOf(focusImageUrl);
-    if (index >= 0) setActiveIndex(index);
-  }, [focusImageUrl, images]);
+    const index = imageIndex(images, focusImageUrl);
+    if (index < 0) return;
+    scrollMainTo(index, "smooth");
+  }, [focusImageUrl, images, scrollMainTo]);
 
   useEffect(() => {
     if (activeIndex >= images.length) {
-      setActiveIndex(Math.max(0, images.length - 1));
+      scrollMainTo(Math.max(0, images.length - 1), "auto");
     }
-  }, [images.length, activeIndex]);
+  }, [images.length, activeIndex, scrollMainTo]);
+
+  useEffect(() => {
+    const track = mainRef.current;
+    if (!track) return;
+
+    function onScroll() {
+      if (scrollingRef.current || !track) return;
+      const width = track.clientWidth || 1;
+      const next = Math.round(track.scrollLeft / width);
+      setActiveIndex((prev) => (prev === next ? prev : next));
+    }
+
+    track.addEventListener("scroll", onScroll, { passive: true });
+    return () => track.removeEventListener("scroll", onScroll);
+  }, [images.length]);
 
   function updateThumbOverflow() {
     const el = thumbRef.current;
@@ -66,21 +107,21 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setLightboxOpen(false);
       if (e.key === "ArrowLeft") {
-        setActiveIndex((i) => (i - 1 + images.length) % images.length);
+        scrollMainTo(activeIndex - 1);
         setLightboxZoom(1);
       }
       if (e.key === "ArrowRight") {
-        setActiveIndex((i) => (i + 1) % images.length);
+        scrollMainTo(activeIndex + 1);
         setLightboxZoom(1);
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [lightboxOpen, images.length]);
+  }, [lightboxOpen, activeIndex, scrollMainTo]);
 
   function go(delta: number) {
     if (images.length === 0) return;
-    setActiveIndex((i) => (i + delta + images.length) % images.length);
+    scrollMainTo(activeIndex + delta);
     setLightboxZoom(1);
   }
 
@@ -92,7 +133,7 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
     );
   }
 
-  const current = images[activeIndex];
+  const current = images[Math.min(activeIndex, images.length - 1)];
 
   return (
     <>
@@ -102,24 +143,33 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
         onMouseLeave={() => setHoverNav(false)}
       >
         <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-neutral-100 shadow-sm">
-          <button
-            type="button"
-            className="absolute inset-0"
-            onClick={() => {
-              setLightboxOpen(true);
-              setLightboxZoom(1);
-            }}
-            aria-label="Open image gallery"
+          <div
+            ref={mainRef}
+            className="flex size-full snap-x snap-mandatory overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            <Image
-              src={current}
-              alt={alt}
-              fill
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              priority
-            />
-          </button>
+            {images.map((img, index) => (
+              <button
+                key={`${img}-${index}`}
+                type="button"
+                data-slide={index}
+                className="relative h-full w-full min-w-full shrink-0 snap-start basis-full"
+                onClick={() => {
+                  setLightboxOpen(true);
+                  setLightboxZoom(1);
+                }}
+                aria-label={`View image ${index + 1}`}
+              >
+                <Image
+                  src={img}
+                  alt={`${alt} ${index + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  priority={index === 0}
+                />
+              </button>
+            ))}
+          </div>
 
           {images.length > 1 && (
             <>
@@ -178,7 +228,7 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
                   key={`${img}-${index}`}
                   type="button"
                   data-thumb={index}
-                  onClick={() => setActiveIndex(index)}
+                  onClick={() => scrollMainTo(index)}
                   className={cn(
                     "relative h-20 w-16 shrink-0 overflow-hidden rounded-lg",
                     activeIndex === index ? "ring-2 ring-neutral-900" : "opacity-80 hover:opacity-100"
