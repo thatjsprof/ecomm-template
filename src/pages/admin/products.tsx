@@ -10,6 +10,7 @@ import {
 } from "@/services/api";
 import type { Category, Pagination, Product, ProductOption } from "@/types";
 import { formatPrice } from "@/utils/format";
+import { productFormErrorMessage, productFormSchema } from "@/lib/product-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -148,12 +149,12 @@ export default function AdminProductsPage() {
         }))
         .filter((o) => o.name && o.values.length > 0);
 
-      const payload = {
+      const parsed = productFormSchema.safeParse({
         name: form.name,
         description: form.description,
-        price: Number(form.price),
-        salePrice: form.salePrice ? Number(form.salePrice) : null,
-        stock: Number(form.stock),
+        price: form.price,
+        salePrice: form.salePrice,
+        stock: form.stock,
         sku: form.sku,
         categoryId: form.categoryId,
         featured: form.featured,
@@ -165,27 +166,31 @@ export default function AdminProductsPage() {
           .filter((v) => v.sku.trim())
           .map((v) => ({
             id: v.id,
-            sku: v.sku.trim(),
+            sku: v.sku,
             attributes: v.attributes,
             stock: Number(v.stock) || 0,
             price: v.price ? Number(v.price) : null,
             salePrice: v.salePrice ? Number(v.salePrice) : null,
             active: true,
           })),
-      };
+      });
+
+      if (!parsed.success) {
+        throw new Error(productFormErrorMessage(parsed.error));
+      }
 
       if (editing) {
-        await updateProduct(editing.id, payload);
+        await updateProduct(editing.id, parsed.data);
         toast.success("Product updated");
       } else {
-        await createProduct(payload);
+        await createProduct(parsed.data);
         toast.success("Product created");
       }
 
       setOpen(false);
       load(page);
-    } catch {
-      toast.error("Save failed");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSaving(false);
     }
@@ -222,14 +227,16 @@ export default function AdminProductsPage() {
                 <Label>Name</Label>
                 <Input
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                 />
               </div>
               <div className="space-y-1">
                 <Label>Description</Label>
                 <Textarea
                   value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, description: e.target.value }))
+                  }
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -238,7 +245,7 @@ export default function AdminProductsPage() {
                   <Input
                     type="number"
                     value={form.price}
-                    onChange={(e) => setForm({ ...form, price: e.target.value })}
+                    onChange={(e) => setForm((prev) => ({ ...prev, price: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-1">
@@ -246,7 +253,9 @@ export default function AdminProductsPage() {
                   <Input
                     type="number"
                     value={form.salePrice}
-                    onChange={(e) => setForm({ ...form, salePrice: e.target.value })}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, salePrice: e.target.value }))
+                    }
                   />
                 </div>
               </div>
@@ -256,14 +265,14 @@ export default function AdminProductsPage() {
                   <Input
                     type="number"
                     value={form.stock}
-                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
+                    onChange={(e) => setForm((prev) => ({ ...prev, stock: e.target.value }))}
                   />
                 </div>
                 <div className="space-y-1">
                   <Label>Base SKU</Label>
                   <Input
                     value={form.sku}
-                    onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                    onChange={(e) => setForm((prev) => ({ ...prev, sku: e.target.value }))}
                   />
                 </div>
               </div>
@@ -273,7 +282,8 @@ export default function AdminProductsPage() {
                   <Select
                     value={form.categoryId || null}
                     onValueChange={(value) =>
-                      value && setForm({ ...form, categoryId: String(value) })
+                      value &&
+                      setForm((prev) => ({ ...prev, categoryId: String(value) }))
                     }
                     items={categories.map((c) => ({ value: c.id, label: c.name }))}
                   >
@@ -337,21 +347,25 @@ export default function AdminProductsPage() {
                 <label className="flex items-center gap-2 text-sm">
                   <Checkbox
                     checked={form.featured}
-                    onCheckedChange={(v) => setForm({ ...form, featured: !!v })}
+                    onCheckedChange={(v) =>
+                      setForm((prev) => ({ ...prev, featured: !!v }))
+                    }
                   />
                   Featured
                 </label>
                 <label className="flex items-center gap-2 text-sm">
                   <Checkbox
                     checked={form.newArrival}
-                    onCheckedChange={(v) => setForm({ ...form, newArrival: !!v })}
+                    onCheckedChange={(v) =>
+                      setForm((prev) => ({ ...prev, newArrival: !!v }))
+                    }
                   />
                   New arrival
                 </label>
                 <label className="flex items-center gap-2 text-sm">
                   <Checkbox
                     checked={form.active}
-                    onCheckedChange={(v) => setForm({ ...form, active: !!v })}
+                    onCheckedChange={(v) => setForm((prev) => ({ ...prev, active: !!v }))}
                   />
                   Active
                 </label>
