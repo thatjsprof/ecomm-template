@@ -51,6 +51,16 @@ export const siteConfig = {
     phone: "",
   },
 
+  /**
+   * Floating WhatsApp chat button (bottom-right on storefront).
+   * phone: country code + number, digits only preferred (e.g. "2348012345678")
+   */
+  whatsapp: {
+    enabled: true,
+    phone: "",
+    message: "Hi! I'd like to know more about your products.",
+  },
+
   social: [] as { name: string; href: string }[],
 
   /** Documented for rebrands — swap imports in `_app.tsx` to match */

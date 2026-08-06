@@ -57,30 +57,32 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
 
   return (
     <section
-      className="relative min-h-[calc(100dvh-4rem)] overflow-hidden bg-neutral-900"
+      className="relative min-h-[calc(100dvh-4rem)] bg-neutral-900"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {slides.map((slide, i) => (
-        <Link
-          key={slide.id}
-          href={`/collections/${slide.slug}`}
-          aria-hidden={i !== index}
-          tabIndex={i === index ? 0 : -1}
-          className={cn(
-            "absolute inset-0 block transition-opacity duration-[1200ms] ease-in-out",
-            i === index ? "z-[1] opacity-100" : "z-0 opacity-0 pointer-events-none"
-          )}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={slide.image!}
-            alt=""
-            className="absolute inset-0 size-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/55 via-neutral-950/20 to-neutral-950/10" />
-        </Link>
-      ))}
+      <div className="absolute inset-0 overflow-hidden">
+        {slides.map((slide, i) => (
+          <Link
+            key={slide.id}
+            href={`/collections/${slide.slug}`}
+            aria-hidden={i !== index}
+            tabIndex={i === index ? 0 : -1}
+            className={cn(
+              "absolute inset-0 block transition-opacity duration-[1200ms] ease-in-out",
+              i === index ? "z-[1] opacity-100" : "z-0 opacity-0 pointer-events-none"
+            )}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={slide.image!}
+              alt=""
+              className="absolute inset-0 size-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/55 via-neutral-950/20 to-neutral-950/10" />
+          </Link>
+        ))}
+      </div>
 
       <div className="pointer-events-none relative z-[2] mx-auto flex min-h-[calc(100dvh-4rem)] max-w-7xl flex-col justify-end px-6 pb-20 pt-28 lg:px-8">
         <div key={current.id}>
@@ -112,12 +114,12 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
       </div>
 
       {slides.length > 1 && (
-        <div className="absolute bottom-6 right-6 z-[3] flex items-center gap-2 sm:bottom-8 sm:right-8">
+        <div className="absolute bottom-0 right-20 z-[3] flex translate-y-1/2 items-center gap-3 sm:right-24">
           <button
             type="button"
             aria-label="Previous slide"
             onClick={() => go(-1)}
-            className="flex size-11 items-center justify-center rounded-full bg-white text-neutral-900 shadow-sm transition hover:bg-white/90"
+            className="flex size-11 items-center justify-center rounded-full bg-white text-neutral-900 shadow-md transition hover:bg-neutral-50"
           >
             <ChevronLeft className="size-5" strokeWidth={1.5} />
           </button>
@@ -125,7 +127,7 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
             type="button"
             aria-label="Next slide"
             onClick={() => go(1)}
-            className="flex size-11 items-center justify-center rounded-full bg-white text-neutral-900 shadow-sm transition hover:bg-white/90"
+            className="flex size-11 items-center justify-center rounded-full bg-white text-neutral-900 shadow-md transition hover:bg-neutral-50"
           >
             <ChevronRight className="size-5" strokeWidth={1.5} />
           </button>

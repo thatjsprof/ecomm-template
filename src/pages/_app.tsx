@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { useRouter } from "next/router";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { WhatsAppButton } from "@/components/layout/whatsapp-button";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Providers } from "@/components/providers";
 import { siteTitle } from "@/config/site";
@@ -38,6 +39,7 @@ export default function App({ Component, pageProps }: AppProps) {
                 <Component {...pageProps} />
               </main>
               <Footer />
+              <WhatsAppButton />
             </>
           )}
         </Providers>
