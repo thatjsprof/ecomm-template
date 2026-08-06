@@ -151,7 +151,7 @@ export default function ShopPage() {
                 }}
                 autoComplete="off"
                 className={cn(
-                  "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base outline-none md:text-sm",
+                  "h-10 w-full min-w-0 rounded-lg border border-input bg-transparent px-3 py-1 text-base outline-none md:text-sm",
                   search && "pr-9"
                 )}
               />
