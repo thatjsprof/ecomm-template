@@ -42,7 +42,7 @@ export default function DashboardPage() {
       </div>
 
       {user.role === "ADMIN" && (
-        <Link href="/admin" className={cn(buttonVariants(), "mt-8 rounded-full")}>
+        <Link href="/admin" className={cn(buttonVariants(), "mt-8 rounded-lg")}>
           Go to admin
         </Link>
       )}

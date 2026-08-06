@@ -260,7 +260,7 @@ export default function CheckoutPage() {
         <div className="mt-10 space-y-3">
           <Link
             href="/login?next=/checkout"
-            className={cn(buttonVariants({ size: "lg" }), "w-full rounded-full")}
+            className={cn(buttonVariants({ size: "lg" }), "w-full rounded-lg")}
           >
             Sign in
           </Link>
@@ -268,7 +268,7 @@ export default function CheckoutPage() {
             href="/register?next=/checkout"
             className={cn(
               buttonVariants({ size: "lg", variant: "outline" }),
-              "w-full rounded-full"
+              "w-full rounded-lg"
             )}
           >
             Create an account
@@ -277,7 +277,7 @@ export default function CheckoutPage() {
             type="button"
             size="lg"
             variant="ghost"
-            className="w-full rounded-full"
+            className="w-full rounded-lg"
             onClick={() => setGuestCheckout(true)}
           >
             Continue as guest
@@ -545,7 +545,7 @@ export default function CheckoutPage() {
 
           <Button
             type="submit"
-            className="mt-6 w-full rounded-full"
+            className="mt-6 w-full rounded-lg"
             disabled={isSubmitting || !shippingOptionId}
           >
             {isSubmitting ? "Processing…" : `Pay with ${provider}`}

@@ -69,7 +69,7 @@ export default function LoginPage() {
             Forgot password?
           </Link>
         </div>
-        <Button type="submit" className="w-full rounded-full" disabled={isSubmitting}>
+        <Button type="submit" className="w-full rounded-lg" disabled={isSubmitting}>
           {isSubmitting ? "Signing in…" : "Sign in"}
         </Button>
       </form>

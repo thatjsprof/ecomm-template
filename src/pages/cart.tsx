@@ -13,7 +13,7 @@ export default function CartPage() {
       <div className="mx-auto max-w-3xl px-6 py-24 text-center">
         <h1 className="font-display text-4xl text-neutral-900">Your cart</h1>
         <p className="mt-4 text-sm text-neutral-500">Your cart is empty.</p>
-        <Link href="/shop" className={cn(buttonVariants(), "mt-8 rounded-full")}>
+        <Link href="/shop" className={cn(buttonVariants(), "mt-8 rounded-lg")}>
           Continue shopping
         </Link>
       </div>
@@ -52,7 +52,7 @@ export default function CartPage() {
                 <p className="mt-1 text-sm text-neutral-500">{formatPrice(price)}</p>
               </div>
               <div className="flex items-center gap-4">
-                <div className="flex items-center rounded-full border border-neutral-200">
+                <div className="flex items-center rounded-lg border border-neutral-200">
                   <button
                     type="button"
                     className="px-3 py-1 text-sm"
@@ -92,7 +92,7 @@ export default function CartPage() {
         </div>
         <Link
           href="/checkout"
-          className={cn(buttonVariants({ size: "lg" }), "rounded-full px-8")}
+          className={cn(buttonVariants({ size: "lg" }), "rounded-lg px-8")}
         >
           Checkout
         </Link>

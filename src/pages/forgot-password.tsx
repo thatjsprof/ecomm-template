@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
           <Input id="email" type="email" {...register("email")} />
           {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
         </div>
-        <Button type="submit" className="w-full rounded-full" disabled={isSubmitting}>
+        <Button type="submit" className="w-full rounded-lg" disabled={isSubmitting}>
           Send reset link
         </Button>
       </form>

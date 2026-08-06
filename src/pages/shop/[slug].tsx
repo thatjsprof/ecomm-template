@@ -171,7 +171,7 @@ export default function ProductDetailPage() {
                           type="button"
                           onClick={() => selectAttribute(key, value)}
                           aria-pressed={selected}
-                          className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors ${selected
+                          className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm transition-colors ${selected
                               ? soldOut
                                 ? "border-neutral-400 bg-neutral-400 text-white line-through"
                                 : "border-neutral-900 bg-neutral-900 text-white"
@@ -206,7 +206,7 @@ export default function ProductDetailPage() {
             </p>
 
             <div className="mt-8 flex items-center gap-4">
-              <div className="flex items-center rounded-full border border-neutral-200">
+              <div className="flex items-center rounded-lg border border-neutral-200">
                 <button
                   type="button"
                   className="px-4 py-2 text-sm"
@@ -227,7 +227,7 @@ export default function ProductDetailPage() {
               </div>
               <Button
                 size="lg"
-                className="rounded-full px-8"
+                className="rounded-lg px-8"
                 disabled={!canAdd}
                 onClick={handleAdd}
               >

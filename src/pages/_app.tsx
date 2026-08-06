@@ -1,4 +1,5 @@
 import type { AppProps } from "next/app";
+import type { CSSProperties } from "react";
 import Head from "next/head";
 import { Inter } from "next/font/google";
 import { useRouter } from "next/router";
@@ -7,7 +8,7 @@ import { Footer } from "@/components/layout/footer";
 import { WhatsAppButton } from "@/components/layout/whatsapp-button";
 import { AdminLayout } from "@/components/layout/admin-layout";
 import { Providers } from "@/components/providers";
-import { siteTitle } from "@/config/site";
+import { siteConfig, siteTitle } from "@/config/site";
 import "@/styles/globals.css";
 
 /** Swap this font when rebranding — keep name in sync with `config/site.ts` */
@@ -26,7 +27,10 @@ export default function App({ Component, pageProps }: AppProps) {
         <title>{siteTitle()}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <div className={inter.variable}>
+      <div
+        className={inter.variable}
+        style={{ ["--radius"]: siteConfig.radius } as CSSProperties}
+      >
         <Providers>
           {isAdmin ? (
             <AdminLayout>

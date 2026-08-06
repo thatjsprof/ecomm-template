@@ -226,7 +226,7 @@ export default function ProfilePage() {
             <p className="text-xs text-red-500">{profileForm.formState.errors.email.message}</p>
           )}
         </div>
-        <Button type="submit" className="rounded-full">
+        <Button type="submit" className="rounded-lg">
           Save changes
         </Button>
       </form>
@@ -376,13 +376,13 @@ export default function ProfilePage() {
               Set as default address
             </label>
             <div className="flex gap-2 pt-1">
-              <Button type="submit" className="rounded-full">
+              <Button type="submit" className="rounded-lg">
                 {editingId ? "Update address" : "Save address"}
               </Button>
               <Button
                 type="button"
                 variant="ghost"
-                className="rounded-full"
+                className="rounded-lg"
                 onClick={() => {
                   setShowAddressForm(false);
                   setEditingId(null);
@@ -418,7 +418,7 @@ export default function ProfilePage() {
             </p>
           )}
         </div>
-        <Button type="submit" variant="outline" className="rounded-full">
+        <Button type="submit" variant="outline" className="rounded-lg">
           Update password
         </Button>
       </form>

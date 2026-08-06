@@ -69,7 +69,7 @@ export default function ResetPasswordPage() {
               <p className="text-xs text-red-500">{errors.confirm.message}</p>
             )}
           </div>
-          <Button type="submit" className="w-full rounded-full" disabled={isSubmitting}>
+          <Button type="submit" className="w-full rounded-lg" disabled={isSubmitting}>
             Update password
           </Button>
         </form>

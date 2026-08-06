@@ -76,7 +76,7 @@ export default function RegisterPage() {
           <Input id="password" type="password" {...register("password")} />
           {errors.password && <p className="text-xs text-red-500">{errors.password.message}</p>}
         </div>
-        <Button type="submit" className="w-full rounded-full" disabled={isSubmitting}>
+        <Button type="submit" className="w-full rounded-lg" disabled={isSubmitting}>
           {isSubmitting ? "Creating…" : "Create account"}
         </Button>
       </form>

@@ -334,7 +334,7 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
                 type="button"
                 onClick={() => goMain(-1)}
                 className={cn(
-                  "absolute left-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow transition-opacity",
+                  "absolute left-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-lg bg-white/90 text-neutral-900 shadow transition-opacity",
                   hoverNav ? "opacity-100" : "opacity-0"
                 )}
                 aria-label="Previous image"
@@ -345,7 +345,7 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
                 type="button"
                 onClick={() => goMain(1)}
                 className={cn(
-                  "absolute right-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow transition-opacity",
+                  "absolute right-3 top-1/2 z-10 flex size-10 -translate-y-1/2 items-center justify-center rounded-lg bg-white/90 text-neutral-900 shadow transition-opacity",
                   hoverNav ? "opacity-100" : "opacity-0"
                 )}
                 aria-label="Next image"
@@ -358,7 +358,7 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
           <button
             type="button"
             onClick={openLightbox}
-            className="absolute bottom-3 right-3 z-10 flex size-10 items-center justify-center rounded-full bg-white/90 text-neutral-900 shadow"
+            className="absolute bottom-3 right-3 z-10 flex size-10 items-center justify-center rounded-lg bg-white/90 text-neutral-900 shadow"
             aria-label="Expand image"
           >
             <Expand className="size-4" />
@@ -421,7 +421,7 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
               <button
                 type="button"
                 onClick={toggleLightboxZoom}
-                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm hover:bg-white/15"
+                className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-1.5 text-sm hover:bg-white/15"
               >
                 <ZoomIn className="size-4" />
                 {lightboxZoom > 1 ? "Reset zoom" : "Zoom"}
@@ -429,7 +429,7 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
               <button
                 type="button"
                 onClick={() => setLightboxOpen(false)}
-                className="flex size-9 items-center justify-center rounded-full bg-white/10 hover:bg-white/15"
+                className="flex size-9 items-center justify-center rounded-lg bg-white/10 hover:bg-white/15"
                 aria-label="Close"
               >
                 <X className="size-5" />
@@ -494,14 +494,14 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
               <button
                 type="button"
                 onClick={() => goLightbox(-1)}
-                className="rounded-full bg-white/10 px-4 py-2 text-sm hover:bg-white/15"
+                className="rounded-lg bg-white/10 px-4 py-2 text-sm hover:bg-white/15"
               >
                 Previous
               </button>
               <button
                 type="button"
                 onClick={() => goLightbox(1)}
-                className="rounded-full bg-white/10 px-4 py-2 text-sm hover:bg-white/15"
+                className="rounded-lg bg-white/10 px-4 py-2 text-sm hover:bg-white/15"
               >
                 Next
               </button>

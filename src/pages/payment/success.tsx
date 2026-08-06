@@ -70,7 +70,7 @@ export default function PaymentSuccessPage() {
             <p className="mt-3 text-sm text-neutral-500">
               We could not confirm your payment. Please try again or contact support.
             </p>
-            <Link href="/payment/failed" className={cn(buttonVariants(), "mt-8 rounded-full")}>
+            <Link href="/payment/failed" className={cn(buttonVariants(), "mt-8 rounded-lg")}>
               View details
             </Link>
           </div>
@@ -81,12 +81,12 @@ export default function PaymentSuccessPage() {
               Thank you. Your order has been confirmed.
             </p>
             <div className="mt-8 flex justify-center gap-3">
-              <Link href="/orders" className={cn(buttonVariants(), "rounded-full")}>
+              <Link href="/orders" className={cn(buttonVariants(), "rounded-lg")}>
                 View orders
               </Link>
               <Link
                 href="/shop"
-                className={cn(buttonVariants({ variant: "outline" }), "rounded-full")}
+                className={cn(buttonVariants({ variant: "outline" }), "rounded-lg")}
               >
                 Continue shopping
               </Link>

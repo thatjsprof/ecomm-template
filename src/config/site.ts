@@ -1,11 +1,18 @@
 /**
  * Single place to rebrand / reconfigure the storefront.
  *
- * Theme colors & radius: `src/styles/globals.css` (`:root`)
+ * Theme colors: `src/styles/globals.css` (`:root`)
  * Fonts are loaded in `src/pages/_app.tsx` (next/font needs static imports)
+ * Corner radius: `radius` below (applied as CSS `--radius` in `_app.tsx`)
  */
 
 export const siteConfig = {
+  /**
+   * Global corner radius (CSS length). Drives buttons, inputs, cards, etc.
+   * Use `"0"` for sharp corners, or e.g. `"0.625rem"` for soft.
+   */
+  radius: "0",
+
   /** Display name (titles, copyright, admin) */
   name: "Alurd",
   /** Logo / hero text (often all-caps) */
