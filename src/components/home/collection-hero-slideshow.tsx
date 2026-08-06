@@ -83,22 +83,21 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
       ))}
 
       <div className="pointer-events-none relative z-[2] mx-auto flex min-h-[78vh] max-w-7xl flex-col justify-end px-6 pb-20 pt-28 lg:px-8">
-        <div
-          key={current.id}
-          className="animate-in fade-in duration-700"
-        >
-          <p className="font-display text-5xl tracking-tight text-white sm:text-7xl">
+        <div key={current.id}>
+          <p className="animate-in fade-in fill-mode-both duration-700 font-display text-5xl tracking-tight text-white sm:text-7xl">
             {siteConfig.nameDisplay}
           </p>
-          <h1 className="mt-4 max-w-xl text-lg leading-relaxed text-white/85 sm:text-xl">
-            {current.name}
-          </h1>
-          {current.description ? (
-            <p className="mt-2 max-w-lg text-sm text-white/70">{current.description}</p>
-          ) : (
-            <p className="mt-2 max-w-lg text-sm text-white/70">{siteConfig.heroTagline}</p>
-          )}
-          <div className="pointer-events-auto mt-8">
+          <div className="animate-in fade-in fill-mode-both duration-700 delay-300">
+            <h1 className="mt-4 max-w-xl text-lg leading-relaxed text-white/85 sm:text-xl">
+              {current.name}
+            </h1>
+            {current.description ? (
+              <p className="mt-2 max-w-lg text-sm text-white/70">{current.description}</p>
+            ) : (
+              <p className="mt-2 max-w-lg text-sm text-white/70">{siteConfig.heroTagline}</p>
+            )}
+          </div>
+          <div className="pointer-events-auto mt-8 animate-in fade-in fill-mode-both duration-700 delay-500">
             <Link
               href={`/collections/${current.slug}`}
               className={cn(
