@@ -3,6 +3,7 @@ name: Deploy frontend
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: deploy-frontend
@@ -26,7 +27,6 @@ jobs:
             cd /var/www/alurd-frontend
             git fetch origin main
             git reset --hard origin/main
-            # Avoid ENOTEMPTY races from a half-updated node_modules tree
             rm -rf node_modules
             npm ci
             npm run build
