@@ -32,7 +32,7 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
 
   if (slides.length === 0) {
     return (
-      <section className="relative flex min-h-[78vh] items-end bg-neutral-900 px-6 pb-20 pt-28 lg:px-8">
+      <section className="relative flex min-h-[calc(100dvh-4rem)] items-end bg-neutral-900 px-6 pb-20 pt-28 lg:px-8">
         <div className="mx-auto w-full max-w-7xl">
           <p className="font-display text-5xl tracking-tight text-white sm:text-7xl">
             {siteConfig.nameDisplay}
@@ -57,7 +57,7 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
 
   return (
     <section
-      className="relative min-h-[78vh] overflow-hidden bg-neutral-900"
+      className="relative min-h-[calc(100dvh-4rem)] overflow-hidden bg-neutral-900"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -82,7 +82,7 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
         </Link>
       ))}
 
-      <div className="pointer-events-none relative z-[2] mx-auto flex min-h-[78vh] max-w-7xl flex-col justify-end px-6 pb-20 pt-28 lg:px-8">
+      <div className="pointer-events-none relative z-[2] mx-auto flex min-h-[calc(100dvh-4rem)] max-w-7xl flex-col justify-end px-6 pb-20 pt-28 lg:px-8">
         <div key={current.id}>
           <p className="animate-in fade-in fill-mode-both duration-700 font-display text-5xl tracking-tight text-white sm:text-7xl">
             {siteConfig.nameDisplay}

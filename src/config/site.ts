@@ -55,8 +55,8 @@ export const siteConfig = {
 
   /** Documented for rebrands — swap imports in `_app.tsx` to match */
   fonts: {
-    display: "Cormorant Garamond",
-    sans: "Manrope",
+    display: "Inter",
+    sans: "Inter",
   },
 } as const;
 

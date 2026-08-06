@@ -1,6 +1,6 @@
 import type { AppProps } from "next/app";
 import Head from "next/head";
-import { Cormorant_Garamond, Manrope } from "next/font/google";
+import { Inter } from "next/font/google";
 import { useRouter } from "next/router";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -9,15 +9,9 @@ import { Providers } from "@/components/providers";
 import { siteTitle } from "@/config/site";
 import "@/styles/globals.css";
 
-/** Swap these fonts when rebranding — keep names in sync with `config/site.ts` */
-const display = Cormorant_Garamond({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const sans = Manrope({
-  variable: "--font-sans",
+/** Swap this font when rebranding — keep name in sync with `config/site.ts` */
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -31,7 +25,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <title>{siteTitle()}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <div className={`${display.variable} ${sans.variable}`}>
+      <div className={inter.variable}>
         <Providers>
           {isAdmin ? (
             <AdminLayout>
