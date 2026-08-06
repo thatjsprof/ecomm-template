@@ -51,15 +51,21 @@ export function Header() {
           {user ? (
             <div className="hidden items-center gap-2 sm:flex">
               {user.role === "ADMIN" && (
-                <Link href="/admin" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+                <Link
+                  href="/admin"
+                  className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "rounded-full")}
+                >
                   Admin
                 </Link>
               )}
-              <Link href="/dashboard" className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}>
+              <Link
+                href="/dashboard"
+                className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "rounded-full")}
+              >
                 <User className="size-4" />
                 <span className="sr-only">Account</span>
               </Link>
-              <Button variant="ghost" size="sm" onClick={logout}>
+              <Button variant="ghost" size="sm" className="rounded-full" onClick={logout}>
                 Logout
               </Button>
             </div>
@@ -68,7 +74,7 @@ export function Header() {
               href="/login"
               className={cn(
                 buttonVariants({ variant: "ghost", size: "sm" }),
-                "hidden sm:inline-flex"
+                "hidden rounded-full sm:inline-flex"
               )}
             >
               Sign in
@@ -77,7 +83,10 @@ export function Header() {
 
           <Link
             href="/cart"
-            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "relative")}
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "relative rounded-full"
+            )}
           >
             <ShoppingBag className="size-4" />
             {count > 0 && (
@@ -90,7 +99,7 @@ export function Header() {
           <Button
             variant="ghost"
             size="sm"
-            className="md:hidden"
+            className="rounded-full md:hidden"
             onClick={() => setOpen((v) => !v)}
           >
             {open ? <X className="size-4" /> : <Menu className="size-4" />}

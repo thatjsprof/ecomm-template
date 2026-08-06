@@ -119,7 +119,7 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
             type="button"
             aria-label="Previous slide"
             onClick={() => go(-1)}
-            className="flex size-11 items-center justify-center rounded-lg bg-white text-neutral-900 shadow-md transition hover:bg-neutral-50"
+            className="flex size-11 items-center justify-center rounded-full bg-white text-neutral-900 shadow-md transition hover:bg-neutral-50"
           >
             <ChevronLeft className="size-5" strokeWidth={1.5} />
           </button>
@@ -127,7 +127,7 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
             type="button"
             aria-label="Next slide"
             onClick={() => go(1)}
-            className="flex size-11 items-center justify-center rounded-lg bg-white text-neutral-900 shadow-md transition hover:bg-neutral-50"
+            className="flex size-11 items-center justify-center rounded-full bg-white text-neutral-900 shadow-md transition hover:bg-neutral-50"
           >
             <ChevronRight className="size-5" strokeWidth={1.5} />
           </button>
