@@ -80,7 +80,7 @@ export default function HomePage({
                   href="/shop"
                   className={cn(
                     buttonVariants({ size: "lg", variant: "secondary" }),
-                    "rounded-full bg-white px-8 text-neutral-900 hover:bg-white/90"
+                    "h-14 rounded-full bg-white px-10 text-sm font-bold uppercase tracking-wide text-neutral-900 hover:bg-white/90"
                   )}
                 >
                   Shop collection
