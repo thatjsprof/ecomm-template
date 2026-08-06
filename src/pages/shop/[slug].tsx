@@ -205,11 +205,11 @@ export default function ProductDetailPage() {
                   : "Out of stock"}
             </p>
 
-            <div className="mt-8 flex items-center gap-4">
-              <div className="flex items-center rounded-lg border border-neutral-200">
+            <div className="mt-8 flex items-stretch gap-4">
+              <div className="flex h-11 items-center rounded-lg border border-neutral-200">
                 <button
                   type="button"
-                  className="px-4 py-2 text-sm"
+                  className="flex h-full items-center px-4 text-sm"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                 >
                   −
@@ -217,7 +217,7 @@ export default function ProductDetailPage() {
                 <span className="w-8 text-center text-sm">{quantity}</span>
                 <button
                   type="button"
-                  className="px-4 py-2 text-sm"
+                  className="flex h-full items-center px-4 text-sm"
                   onClick={() =>
                     setQuantity((q) => Math.min(Math.max(combinationValid ? stock : 1, 1), q + 1))
                   }
@@ -227,7 +227,7 @@ export default function ProductDetailPage() {
               </div>
               <Button
                 size="lg"
-                className="rounded-lg px-8"
+                className="h-11 rounded-lg px-8"
                 disabled={!canAdd}
                 onClick={handleAdd}
               >
