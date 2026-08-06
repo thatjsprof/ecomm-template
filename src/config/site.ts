@@ -57,7 +57,7 @@ export const siteConfig = {
    */
   whatsapp: {
     enabled: true,
-    phone: "",
+    phone: "2348012345678",
     message: "Hi! I'd like to know more about your products.",
   },
 
