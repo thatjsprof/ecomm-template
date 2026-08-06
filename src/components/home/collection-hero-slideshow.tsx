@@ -90,13 +90,13 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
             {siteConfig.nameDisplay}
           </p>
           <div className="animate-in fade-in fill-mode-both duration-700 delay-300">
-            <h1 className="mt-4 max-w-xl text-lg leading-relaxed text-white/85 sm:text-xl">
+            <h1 className="mt-4 max-w-xl text-xl leading-relaxed text-white/85 sm:text-2xl">
               {current.name}
             </h1>
             {current.description ? (
-              <p className="mt-2 max-w-lg text-sm text-white/70">{current.description}</p>
+              <p className="mt-2 max-w-lg text-base text-white/70 sm:text-lg">{current.description}</p>
             ) : (
-              <p className="mt-2 max-w-lg text-sm text-white/70">{siteConfig.heroTagline}</p>
+              <p className="mt-2 max-w-lg text-base text-white/70 sm:text-lg">{siteConfig.heroTagline}</p>
             )}
           </div>
           <div className="pointer-events-auto mt-8 animate-in fade-in fill-mode-both duration-700 delay-500">

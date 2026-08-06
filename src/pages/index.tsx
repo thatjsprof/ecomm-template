@@ -72,7 +72,7 @@ export default function HomePage({
               <p className="font-display text-5xl tracking-tight text-white sm:text-7xl">
                 {siteConfig.nameDisplay}
               </p>
-              <h1 className="mt-4 max-w-xl text-lg leading-relaxed text-white/80 sm:text-xl">
+              <h1 className="mt-4 max-w-xl text-xl leading-relaxed text-white/80 sm:text-2xl">
                 {siteConfig.heroTagline}
               </h1>
               <div className="mt-8">
