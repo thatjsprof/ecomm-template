@@ -22,6 +22,7 @@ interface CartContextValue {
   clearCart: () => void;
   subtotal: number;
   count: number;
+  ready: boolean;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -106,7 +107,8 @@ function mergeCarts(local: CartItem[], remote: CartItem[]): CartItem[] {
 export function CartProvider({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
-  const [ready, setReady] = useState(false);
+  const [localReady, setLocalReady] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const skipSync = useRef(true);
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** undefined = first auth resolve, null = guest, string = logged-in user id */
@@ -127,12 +129,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // Load guest/local cache immediately
   useEffect(() => {
     setItems(readLocalCart());
-    setReady(true);
+    setLocalReady(true);
   }, []);
 
   // Hydrate from server when logged in. Only sum-merge guest → account on login.
   useEffect(() => {
-    if (!ready || authLoading) return;
+    if (!localReady || authLoading) return;
 
     let cancelled = false;
 
@@ -209,6 +211,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       } finally {
         if (!cancelled) {
           skipSync.current = false;
+          setHydrated(true);
         }
       }
     }
@@ -218,11 +221,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [user, authLoading, ready]);
+  }, [user, authLoading, localReady]);
 
   // Persist locally; debounce sync to server when logged in
   useEffect(() => {
-    if (!ready || skipSync.current) return;
+    if (!localReady || skipSync.current) return;
 
     writeLocalCart(items);
 
@@ -236,7 +239,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return () => {
       if (syncTimer.current) clearTimeout(syncTimer.current);
     };
-  }, [items, ready, user, pushToServer]);
+  }, [items, localReady, user, pushToServer]);
 
   function addItem(product: Product, quantity = 1, variant: ProductVariant | null = null) {
     const stock = variant ? variant.stock : product.stock;
@@ -327,7 +330,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQuantity, clearCart, subtotal, count }}
+      value={{
+        items,
+        addItem,
+        removeItem,
+        updateQuantity,
+        clearCart,
+        subtotal,
+        count,
+        ready: hydrated,
+      }}
     >
       {children}
     </CartContext.Provider>

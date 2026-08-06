@@ -43,7 +43,7 @@ type FormData = z.infer<typeof schema>;
 export default function CheckoutPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { items, subtotal } = useCart();
+  const { items, subtotal, ready: cartReady } = useCart();
   const [discount, setDiscount] = useState(0);
   const [couponApplied, setCouponApplied] = useState("");
   const [guestCheckout, setGuestCheckout] = useState(false);
@@ -69,10 +69,11 @@ export default function CheckoutPage() {
   });
 
   useEffect(() => {
+    if (!cartReady) return;
     if (items.length === 0) {
       router.replace("/cart");
     }
-  }, [items, router]);
+  }, [cartReady, items, router]);
 
   useEffect(() => {
     let cancelled = false;
@@ -236,8 +237,12 @@ export default function CheckoutPage() {
     }
   }
 
-  if (items.length === 0) {
-    return null;
+  if (!cartReady || items.length === 0) {
+    return (
+      <div className="mx-auto max-w-5xl px-6 py-12 lg:px-8">
+        <p className="text-sm text-neutral-500">Loading…</p>
+      </div>
+    );
   }
 
   if (authLoading) {
