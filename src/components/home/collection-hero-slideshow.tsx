@@ -42,7 +42,7 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
             href="/shop"
             className={cn(
               buttonVariants({ size: "lg", variant: "secondary" }),
-              "mt-8 h-14 rounded-lg bg-white px-10 text-sm font-bold uppercase tracking-wide text-neutral-900 hover:bg-white/90"
+              "mt-8 h-14 rounded-lg bg-white px-10 text-base font-bold uppercase tracking-wide text-neutral-900 hover:bg-white/90"
             )}
           >
             Shop Now
@@ -97,7 +97,7 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
               href={`/collections/${current.slug}`}
               className={cn(
                 buttonVariants({ size: "lg", variant: "secondary" }),
-                "h-14 rounded-lg bg-white px-10 text-sm font-bold uppercase tracking-wide text-neutral-900 hover:bg-white/90"
+                "h-14 rounded-lg bg-white px-10 text-base font-bold uppercase tracking-wide text-neutral-900 hover:bg-white/90"
               )}
             >
               {ctaLabel}

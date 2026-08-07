@@ -80,7 +80,7 @@ export default function HomePage({
                   href="/shop"
                   className={cn(
                     buttonVariants({ size: "lg", variant: "secondary" }),
-                    "h-14 rounded-lg bg-white px-10 text-sm font-bold uppercase tracking-wide text-neutral-900 hover:bg-white/90"
+                    "h-14 rounded-lg bg-white px-10 text-base font-bold uppercase tracking-wide text-neutral-900 hover:bg-white/90"
                   )}
                 >
                   Shop collection
@@ -94,11 +94,11 @@ export default function HomePage({
           <div className="mb-12 flex items-end justify-between">
             <div>
               <h2 className="font-display text-3xl text-neutral-900 sm:text-4xl">Featured</h2>
-              <p className="mt-2 text-sm text-neutral-500">
+              <p className="mt-2 text-base text-neutral-500">
                 Pieces we return to, season after season.
               </p>
             </div>
-            <Link href="/shop" className="text-sm text-neutral-600 hover:text-neutral-900">
+            <Link href="/shop" className="text-base text-neutral-600 hover:text-neutral-900">
               View all
             </Link>
           </div>
@@ -113,7 +113,7 @@ export default function HomePage({
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mb-12">
               <h2 className="font-display text-3xl text-neutral-900 sm:text-4xl">New arrivals</h2>
-              <p className="mt-2 text-sm text-neutral-500">Fresh additions to the edit.</p>
+              <p className="mt-2 text-base text-neutral-500">Fresh additions to the edit.</p>
             </div>
             <div className="grid grid-cols-2 gap-6 md:grid-cols-4 md:gap-8">
               {newArrivals.map((product) => (
@@ -126,7 +126,7 @@ export default function HomePage({
         <section className="mx-auto max-w-7xl px-6 py-24 lg:px-8">
           <div className="mb-12">
             <h2 className="font-display text-3xl text-neutral-900 sm:text-4xl">Categories</h2>
-            <p className="mt-2 text-sm text-neutral-500">Browse by collection.</p>
+            <p className="mt-2 text-base text-neutral-500">Browse by collection.</p>
           </div>
           <div className="grid gap-6 sm:grid-cols-3">
             {categories.map((category) => (
@@ -146,7 +146,7 @@ export default function HomePage({
                 <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/60 to-transparent" />
                 <div className="relative">
                   <p className="font-display text-3xl text-white">{category.name}</p>
-                  <p className="mt-1 text-sm text-white/80">
+                  <p className="mt-1 text-base text-white/80">
                     {category._count?.products ?? 0} pieces
                   </p>
                 </div>

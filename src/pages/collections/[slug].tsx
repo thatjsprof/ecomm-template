@@ -189,7 +189,7 @@ export default function CollectionPage({ collection }: CollectionPageProps) {
               {collection.name}
             </h1>
             {collection.description ? (
-              <p className="mt-3 max-w-2xl text-sm text-white/75">{collection.description}</p>
+              <p className="mt-3 max-w-2xl text-base text-white/75">{collection.description}</p>
             ) : null}
           </div>
         </section>

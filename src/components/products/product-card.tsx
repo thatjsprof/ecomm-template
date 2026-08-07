@@ -28,8 +28,8 @@ export function ProductCard({ product }: { product: Product }) {
         )}
       </div>
       <div className="mt-4 space-y-1">
-        <h3 className="text-sm font-medium tracking-wide text-neutral-900">{product.name}</h3>
-        <div className="flex items-center gap-2 text-sm">
+        <h3 className="text-base font-medium tracking-wide text-neutral-900">{product.name}</h3>
+        <div className="flex items-center gap-2 text-base">
           <span className="text-neutral-900">{formatPrice(price)}</span>
           {hasSale && (
             <span className="text-neutral-400 line-through">{formatPrice(product.price)}</span>

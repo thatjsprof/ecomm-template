@@ -73,7 +73,7 @@ export function Header() {
               key={link.href}
               href={link.href}
               className={cn(
-                "text-sm tracking-wide transition-colors",
+                "text-base tracking-wide transition-colors",
                 overlay
                   ? "text-white/85 hover:text-white"
                   : "text-neutral-600 hover:text-neutral-900"

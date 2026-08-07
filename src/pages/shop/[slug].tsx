@@ -146,7 +146,7 @@ export default function ProductDetailPage() {
                 <span className="text-neutral-400 line-through">{formatPrice(compareAt)}</span>
               )}
             </div>
-            <p className="mt-6 max-w-md text-sm leading-relaxed text-neutral-600">
+            <p className="mt-6 max-w-md text-base leading-relaxed text-neutral-600">
               {product.description}
             </p>
 

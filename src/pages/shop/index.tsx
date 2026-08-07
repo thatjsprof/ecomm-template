@@ -131,7 +131,7 @@ export default function ShopPage() {
       <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
         <div className="mb-10">
           <h1 className="font-display text-4xl text-neutral-900">Shop</h1>
-          <p className="mt-2 text-sm text-neutral-500">Browse the full collection.</p>
+          <p className="mt-2 text-base text-neutral-500">Browse the full collection.</p>
         </div>
 
         <div className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
