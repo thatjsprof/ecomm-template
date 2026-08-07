@@ -119,8 +119,7 @@ export default function AdminOrdersPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    className="text-red-600 hover:text-red-700"
+                    className="h-10 text-red-600 hover:text-red-700"
                     onClick={() => setDeleting(order)}
                   >
                     Delete
