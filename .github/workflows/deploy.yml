@@ -3,7 +3,6 @@ name: Deploy frontend
 on:
   push:
     branches: [main]
-  workflow_dispatch:
 
 concurrency:
   group: deploy-frontend
@@ -25,9 +24,11 @@ jobs:
           script: |
             set -euo pipefail
             cd /var/www/alurd-frontend
-            git fetch origin main
+            rm -f .git/refs/remotes/origin/main.lock
+            git remote prune origin || true
+            git fetch --force origin main:refs/remotes/origin/main
             git reset --hard origin/main
-            rm -rf node_modules
+            rm -rf node_modules .next
             npm ci
             npm run build
             pm2 restart alurd-web --update-env
