@@ -52,7 +52,7 @@ export function Header() {
         "z-50 transition-colors duration-300",
         isHome ? "fixed inset-x-0 top-0" : "sticky top-0",
         overlay
-          ? "border-transparent bg-transparent"
+          ? "border-transparent bg-gradient-to-b from-black/45 via-black/20 to-transparent"
           : "border-b border-neutral-200/80 bg-white/90 backdrop-blur-md"
       )}
     >
