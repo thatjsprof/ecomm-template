@@ -107,7 +107,7 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
       </div>
 
       {slides.length > 1 && (
-        <div className="absolute bottom-0 right-20 z-[3] flex translate-y-1/2 items-center gap-3 sm:right-24">
+        <div className="absolute bottom-0 right-4 z-[3] flex translate-y-1/2 items-center gap-2 sm:right-8 sm:gap-3">
           <button
             type="button"
             aria-label="Previous slide"

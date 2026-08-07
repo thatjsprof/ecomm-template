@@ -91,14 +91,17 @@ export default function HomePage({
         )}
 
         <section className="mx-auto max-w-7xl px-6 py-24 lg:px-8">
-          <div className="mb-12 flex items-end justify-between">
-            <div>
+          <div className="mb-12 flex items-start justify-between gap-4">
+            <div className="min-w-0">
               <h2 className="font-display text-3xl text-neutral-900 sm:text-4xl">Featured</h2>
               <p className="mt-2 text-base text-neutral-500">
                 Pieces we return to, season after season.
               </p>
             </div>
-            <Link href="/shop" className="text-base text-neutral-600 hover:text-neutral-900">
+            <Link
+              href="/shop"
+              className="shrink-0 whitespace-nowrap pt-1.5 text-base text-neutral-600 hover:text-neutral-900 sm:pt-2"
+            >
               View all
             </Link>
           </div>
