@@ -34,10 +34,10 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
     return (
       <section className="relative flex min-h-dvh items-end bg-neutral-900 px-6 pb-20 pt-28 lg:px-8">
         <div className="mx-auto w-full max-w-7xl">
-          <p className="font-display text-5xl tracking-tight text-white sm:text-7xl">
-            {siteConfig.nameDisplay}
-          </p>
-          <p className="mt-4 max-w-xl text-lg text-white/80">{siteConfig.heroTagline}</p>
+          <h1 className="font-display text-5xl tracking-tight text-white sm:text-7xl">
+            {siteConfig.tagline}
+          </h1>
+          <p className="mt-4 max-w-xl text-xl text-white/80 sm:text-2xl">{siteConfig.heroTagline}</p>
           <Link
             href="/shop"
             className={cn(
@@ -86,19 +86,12 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
 
       <div className="pointer-events-none relative z-[2] mx-auto flex min-h-dvh max-w-7xl flex-col justify-end px-6 pb-20 pt-28 lg:px-8">
         <div key={current.id}>
-          <p className="animate-in fade-in fill-mode-both duration-700 font-display text-5xl tracking-tight text-white sm:text-7xl">
-            {siteConfig.nameDisplay}
+          <h1 className="animate-in fade-in fill-mode-both duration-700 font-display text-5xl tracking-tight text-white sm:text-7xl">
+            {current.name}
+          </h1>
+          <p className="mt-4 max-w-lg animate-in fade-in fill-mode-both text-xl text-white/80 duration-700 delay-300 sm:text-2xl">
+            {current.description?.trim() || siteConfig.heroTagline}
           </p>
-          <div className="animate-in fade-in fill-mode-both duration-700 delay-300">
-            <h1 className="mt-4 max-w-xl text-xl leading-relaxed text-white/85 sm:text-2xl">
-              {current.name}
-            </h1>
-            {current.description ? (
-              <p className="mt-2 max-w-lg text-base text-white/70 sm:text-lg">{current.description}</p>
-            ) : (
-              <p className="mt-2 max-w-lg text-base text-white/70 sm:text-lg">{siteConfig.heroTagline}</p>
-            )}
-          </div>
           <div className="pointer-events-auto mt-8 animate-in fade-in fill-mode-both duration-700 delay-500">
             <Link
               href={`/collections/${current.slug}`}

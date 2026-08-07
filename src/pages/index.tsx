@@ -69,12 +69,12 @@ export default function HomePage({
               }}
             />
             <div className="relative mx-auto flex min-h-dvh max-w-7xl flex-col justify-end px-6 pb-20 pt-28 lg:px-8">
-              <p className="font-display text-5xl tracking-tight text-white sm:text-7xl">
-                {siteConfig.nameDisplay}
-              </p>
-              <h1 className="mt-4 max-w-xl text-xl leading-relaxed text-white/80 sm:text-2xl">
-                {siteConfig.heroTagline}
+              <h1 className="font-display text-5xl tracking-tight text-white sm:text-7xl">
+                {siteConfig.tagline}
               </h1>
+              <p className="mt-4 max-w-xl text-xl leading-relaxed text-white/80 sm:text-2xl">
+                {siteConfig.heroTagline}
+              </p>
               <div className="mt-8">
                 <Link
                   href="/shop"
