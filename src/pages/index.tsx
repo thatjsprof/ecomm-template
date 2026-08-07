@@ -61,14 +61,14 @@ export default function HomePage({
         {useSlideshow ? (
           <CollectionHeroSlideshow collections={heroCollections} />
         ) : (
-          <section className="relative min-h-[calc(100dvh-4rem)] overflow-hidden bg-neutral-100">
+          <section className="relative min-h-dvh overflow-hidden bg-neutral-100">
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{
                 backgroundImage: `linear-gradient(120deg, rgba(10,10,10,0.52) 0%, rgba(10,10,10,0.38) 42%, rgba(10,10,10,0.28) 100%), url('${siteConfig.heroImage}')`,
               }}
             />
-            <div className="relative mx-auto flex min-h-[calc(100dvh-4rem)] max-w-7xl flex-col justify-end px-6 pb-20 pt-28 lg:px-8">
+            <div className="relative mx-auto flex min-h-dvh max-w-7xl flex-col justify-end px-6 pb-20 pt-28 lg:px-8">
               <p className="font-display text-5xl tracking-tight text-white sm:text-7xl">
                 {siteConfig.nameDisplay}
               </p>
