@@ -197,13 +197,21 @@ export default function ProductDetailPage() {
               );
             })}
 
-            <p className="mt-4 text-sm text-neutral-500">
-              {!combinationValid
-                ? "This combination is unavailable"
-                : stock > 0
-                  ? `${stock} in stock`
-                  : "Out of stock"}
-            </p>
+            {!combinationValid ? (
+              <p className="mt-4 text-sm text-neutral-500">This combination is unavailable</p>
+            ) : stock <= 0 ? (
+              <p className="mt-4 text-sm text-neutral-500">Out of stock</p>
+            ) : stock <= 5 ? (
+              <p className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-amber-700">
+                <span className="relative flex size-2 shrink-0">
+                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-amber-400 opacity-75" />
+                  <span className="relative inline-flex size-2 rounded-full bg-amber-500" />
+                </span>
+                Low stock – {stock} {stock === 1 ? "item" : "items"} left
+              </p>
+            ) : (
+              <p className="mt-4 text-sm text-neutral-500">{stock} in stock</p>
+            )}
 
             <div className="mt-8 flex items-stretch gap-4">
               <div className="flex h-11 items-center rounded-lg border border-neutral-200">
