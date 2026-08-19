@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import {
   createShippingOption,
@@ -8,6 +9,7 @@ import {
 } from "@/services/api";
 import type { ShippingOption } from "@/types";
 import { formatPrice } from "@/utils/format";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,15 +25,25 @@ const emptyForm = {
   name: "",
   description: "",
   price: "0",
-  sortOrder: "0",
   active: true,
 };
+
+function moveOption(options: ShippingOption[], from: number, to: number) {
+  if (from === to || from < 0 || to < 0 || from >= options.length || to >= options.length) {
+    return options;
+  }
+  const next = [...options];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item);
+  return next;
+}
 
 export default function AdminShippingPage() {
   const [options, setOptions] = useState<ShippingOption[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<ShippingOption | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   async function load() {
     const res = await getAdminShippingOptions();
@@ -48,7 +60,6 @@ export default function AdminShippingPage() {
       name: option.name,
       description: option.description || "",
       price: String(option.price),
-      sortOrder: String(option.sortOrder ?? 0),
       active: option.active !== false,
     });
     setOpen(true);
@@ -64,7 +75,6 @@ export default function AdminShippingPage() {
       name: form.name.trim(),
       description: form.description.trim(),
       price: Number(form.price) || 0,
-      sortOrder: Number(form.sortOrder) || 0,
       active: form.active,
     };
 
@@ -73,7 +83,11 @@ export default function AdminShippingPage() {
         await updateShippingOption(editing.id, payload);
         toast.success("Shipping option updated");
       } else {
-        await createShippingOption(payload);
+        const nextSortOrder =
+          options.length > 0
+            ? Math.max(...options.map((option) => option.sortOrder ?? 0)) + 1
+            : 0;
+        await createShippingOption({ ...payload, sortOrder: nextSortOrder });
         toast.success("Shipping option created");
       }
       setOpen(false);
@@ -105,13 +119,43 @@ export default function AdminShippingPage() {
     }
   }
 
+  async function onReorder(from: number, to: number) {
+    if (from === to) return;
+
+    const previous = options;
+    const reordered = moveOption(options, from, to).map((option, index) => ({
+      ...option,
+      sortOrder: index,
+    }));
+
+    setOptions(reordered);
+
+    const changed = reordered.filter((option, index) => {
+      const prev = previous.find((item) => item.id === option.id);
+      return (prev?.sortOrder ?? 0) !== index;
+    });
+
+    if (changed.length === 0) return;
+
+    try {
+      await Promise.all(
+        changed.map((option) =>
+          updateShippingOption(option.id, { sortOrder: option.sortOrder })
+        )
+      );
+    } catch {
+      toast.error("Failed to save order");
+      setOptions(previous);
+    }
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl">Shipping</h1>
           <p className="mt-1 text-sm text-neutral-500">
-            Methods and prices shown at checkout
+            Methods and prices shown at checkout. Drag rows to reorder.
           </p>
         </div>
         <Dialog
@@ -155,24 +199,14 @@ export default function AdminShippingPage() {
                   placeholder="5–7 business days"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label>Price</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={form.price}
-                    onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label>Sort order</Label>
-                  <Input
-                    type="number"
-                    value={form.sortOrder}
-                    onChange={(e) => setForm({ ...form, sortOrder: e.target.value })}
-                  />
-                </div>
+              <div className="space-y-1">
+                <Label>Price</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                />
               </div>
               <label className="flex items-center gap-2 text-sm text-neutral-700">
                 <input
@@ -191,32 +225,68 @@ export default function AdminShippingPage() {
       </div>
 
       <div className="mt-8 space-y-3">
-        {options.map((option) => (
+        {options.map((option, index) => (
           <div
             key={option.id}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3"
+            draggable
+            onDragStart={() => setDragIndex(index)}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (dragIndex == null) return;
+              void onReorder(dragIndex, index);
+              setDragIndex(null);
+            }}
+            onDragEnd={() => setDragIndex(null)}
+            className={cn(
+              "flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3",
+              "cursor-grab active:cursor-grabbing",
+              dragIndex === index && "border-neutral-900 opacity-60"
+            )}
           >
-            <div>
-              <p className="font-medium">
-                {option.name}
-                {!option.active && (
-                  <span className="ml-2 text-xs font-normal text-neutral-400">Inactive</span>
-                )}
-              </p>
-              <p className="text-xs text-neutral-500">
-                {option.description || "No description"} ·{" "}
-                {option.price === 0 ? "Free" : formatPrice(option.price)} · sort{" "}
-                {option.sortOrder ?? 0}
-              </p>
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="mt-0.5 shrink-0 text-neutral-400">
+                <GripVertical className="size-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="font-medium">
+                  {option.name}
+                  {!option.active && (
+                    <span className="ml-2 text-xs font-normal text-neutral-400">Inactive</span>
+                  )}
+                </p>
+                <p className="text-xs text-neutral-500">
+                  {option.description || "No description"} ·{" "}
+                  {option.price === 0 ? "Free" : formatPrice(option.price)}
+                </p>
+              </div>
             </div>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => toggleActive(option)}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => toggleActive(option)}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
                 {option.active ? "Deactivate" : "Activate"}
               </Button>
-              <Button size="sm" variant="outline" onClick={() => openEdit(option)}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => openEdit(option)}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
                 Edit
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => onDelete(option.id)}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onDelete(option.id)}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
                 Delete
               </Button>
             </div>

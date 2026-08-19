@@ -18,6 +18,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatPrice } from "@/utils/format";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
@@ -31,7 +32,7 @@ const schema = z.object({
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
   country: z.string().min(1, "Country is required"),
-  paymentProvider: z.enum(["flutterwave", "korapay"]),
+  paymentProvider: z.literal("korapay"),
   shippingOptionId: z.string().min(1, "Shipping option is required"),
   couponCode: z.string().optional(),
   saveAddress: z.boolean().optional(),
@@ -39,6 +40,85 @@ const schema = z.object({
 });
 
 type FormData = z.infer<typeof schema>;
+
+function SavedAddressesSkeleton() {
+  return (
+    <div className="space-y-3">
+      <Skeleton className="h-24 w-full rounded-xl" />
+      <Skeleton className="h-24 w-full rounded-xl" />
+      <Skeleton className="h-14 w-full rounded-xl" />
+    </div>
+  );
+}
+
+function AddressFieldsSkeleton() {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-2 sm:col-span-2">
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-12" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-12" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+      <div className="space-y-2 sm:col-span-2">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-10" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-12" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+      <div className="space-y-2 sm:col-span-2">
+        <Skeleton className="h-4 w-16" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    </div>
+  );
+}
+
+function ShippingOptionsSkeleton() {
+  return (
+    <div className="space-y-3">
+      <Skeleton className="h-[4.5rem] w-full rounded-xl" />
+      <Skeleton className="h-[4.5rem] w-full rounded-xl" />
+    </div>
+  );
+}
+
+function CheckoutPageSkeleton({ showSavedAddresses = false }: { showSavedAddresses?: boolean }) {
+  return (
+    <div className="mx-auto max-w-5xl px-6 py-12 lg:px-8">
+      <Skeleton className="h-10 w-40" />
+      <Skeleton className="mt-2 h-4 w-full max-w-md" />
+      <div className="mt-10 grid gap-12 lg:grid-cols-5">
+        <div className="space-y-5 lg:col-span-3">
+          {showSavedAddresses && (
+            <div>
+              <Skeleton className="mb-3 h-4 w-16" />
+              <SavedAddressesSkeleton />
+            </div>
+          )}
+          <AddressFieldsSkeleton />
+          <div>
+            <Skeleton className="mb-3 h-4 w-20" />
+            <ShippingOptionsSkeleton />
+          </div>
+        </div>
+        <Skeleton className="h-96 self-start rounded-2xl lg:col-span-2" />
+      </div>
+    </div>
+  );
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -50,6 +130,8 @@ export default function CheckoutPage() {
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("new");
+  const [shippingLoading, setShippingLoading] = useState(true);
+  const [addressesLoading, setAddressesLoading] = useState(false);
 
   const {
     register,
@@ -60,7 +142,7 @@ export default function CheckoutPage() {
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
-      paymentProvider: "flutterwave",
+      paymentProvider: "korapay",
       country: siteConfig.defaultCountry,
       shippingOptionId: "",
       saveAddress: true,
@@ -77,6 +159,7 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     let cancelled = false;
+    setShippingLoading(true);
 
     getShippingOptions()
       .then((res) => {
@@ -86,6 +169,9 @@ export default function CheckoutPage() {
       })
       .catch(() => {
         toast.error("Could not load shipping options");
+      })
+      .finally(() => {
+        if (!cancelled) setShippingLoading(false);
       });
 
     return () => {
@@ -112,10 +198,15 @@ export default function CheckoutPage() {
   }
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setAddressesLoading(false);
+      setSavedAddresses([]);
+      return;
+    }
 
     setValue("name", user.name);
     setValue("email", user.email);
+    setAddressesLoading(true);
 
     let cancelled = false;
 
@@ -133,6 +224,8 @@ export default function CheckoutPage() {
           return;
         }
 
+        setSelectedAddressId("new");
+
         // Fallback: last order address if address book is empty
         return getMyOrders().then((ordersRes) => {
           if (cancelled) return;
@@ -143,6 +236,9 @@ export default function CheckoutPage() {
       })
       .catch(() => {
         /* ignore */
+      })
+      .finally(() => {
+        if (!cancelled) setAddressesLoading(false);
       });
 
     return () => {
@@ -151,7 +247,6 @@ export default function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, setValue]);
 
-  const provider = watch("paymentProvider");
   const shippingOptionId = watch("shippingOptionId");
   const saveAddress = watch("saveAddress");
   const selectedShipping =
@@ -238,19 +333,11 @@ export default function CheckoutPage() {
   }
 
   if (!cartReady || items.length === 0) {
-    return (
-      <div className="mx-auto max-w-5xl px-6 py-12 lg:px-8">
-        <p className="text-sm text-neutral-500">Loading…</p>
-      </div>
-    );
+    return <CheckoutPageSkeleton />;
   }
 
   if (authLoading) {
-    return (
-      <div className="mx-auto max-w-5xl px-6 py-12 lg:px-8">
-        <p className="text-sm text-neutral-500">Loading…</p>
-      </div>
-    );
+    return <CheckoutPageSkeleton showSavedAddresses />;
   }
 
   if (showAccountPrompt) {
@@ -324,6 +411,9 @@ export default function CheckoutPage() {
           {user && (
             <div>
               <Label className="mb-3 block">Ship to</Label>
+              {addressesLoading ? (
+                <SavedAddressesSkeleton />
+              ) : (
               <div className="space-y-3">
                 {savedAddresses.map((row) => (
                   <label
@@ -378,9 +468,13 @@ export default function CheckoutPage() {
                   <span className="font-medium text-neutral-900">Use a new address</span>
                 </label>
               </div>
+              )}
             </div>
           )}
 
+          {user && addressesLoading ? (
+            <AddressFieldsSkeleton />
+          ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
               <Label>Full name</Label>
@@ -418,8 +512,9 @@ export default function CheckoutPage() {
               {errors.country && <p className="text-xs text-red-500">{errors.country.message}</p>}
             </div>
           </div>
+          )}
 
-          {user && usingNewAddress && (
+          {user && usingNewAddress && !addressesLoading && (
             <div className="space-y-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
               <label className="flex items-center gap-2 text-sm text-neutral-700">
                 <input type="checkbox" {...register("saveAddress")} />
@@ -436,8 +531,10 @@ export default function CheckoutPage() {
 
           <div>
             <Label className="mb-3 block">Shipping</Label>
-            {shippingOptions.length === 0 ? (
-              <p className="text-sm text-neutral-500">Loading shipping options…</p>
+            {shippingLoading ? (
+              <ShippingOptionsSkeleton />
+            ) : shippingOptions.length === 0 ? (
+              <p className="text-sm text-neutral-500">No shipping options available.</p>
             ) : (
               <div className="space-y-3">
                 {shippingOptions.map((option) => (
@@ -472,33 +569,7 @@ export default function CheckoutPage() {
             )}
           </div>
 
-          <div>
-            <Label className="mb-3 block">Payment method</Label>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {(
-                [
-                  { value: "flutterwave", label: "Flutterwave" },
-                  { value: "korapay", label: "Korapay" },
-                ] as const
-              ).map((p) => (
-                <label
-                  key={p.value}
-                  className={`cursor-pointer rounded-xl border px-4 py-4 text-sm transition-colors ${provider === p.value
-                      ? "border-neutral-900 bg-neutral-50"
-                      : "border-neutral-200 hover:border-neutral-400"
-                    }`}
-                >
-                  <input
-                    type="radio"
-                    value={p.value}
-                    className="mr-2"
-                    {...register("paymentProvider")}
-                  />
-                  {p.label}
-                </label>
-              ))}
-            </div>
-          </div>
+          <input type="hidden" value="korapay" {...register("paymentProvider")} />
         </div>
 
         <div className="self-start rounded-2xl border border-neutral-200 bg-neutral-50 p-6 lg:col-span-2">
@@ -551,9 +622,9 @@ export default function CheckoutPage() {
           <Button
             type="submit"
             className="mt-6 w-full rounded-lg"
-            disabled={isSubmitting || !shippingOptionId}
+            disabled={isSubmitting || shippingLoading || !shippingOptionId}
           >
-            {isSubmitting ? "Processing…" : `Pay with ${provider}`}
+            {isSubmitting ? "Processing…" : "Pay with Korapay"}
           </Button>
         </div>
       </form>
