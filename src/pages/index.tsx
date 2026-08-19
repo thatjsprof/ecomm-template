@@ -143,7 +143,7 @@ export default function HomePage({
                   <img
                     src={category.image}
                     alt={category.name}
-                    className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="absolute inset-0 size-full object-contain object-center transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : null}
                 <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/60 to-transparent" />

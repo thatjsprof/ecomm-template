@@ -185,7 +185,7 @@ export default function ProductDetailPage() {
                             <img
                               src={optionImage}
                               alt=""
-                              className="size-5 rounded-full object-cover"
+                              className="size-5 rounded-full object-contain object-center"
                             />
                           ) : null}
                           {value}

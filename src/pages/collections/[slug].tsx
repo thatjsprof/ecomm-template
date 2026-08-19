@@ -179,7 +179,7 @@ export default function CollectionPage({ collection }: CollectionPageProps) {
             <img
               src={collection.image}
               alt=""
-              className="absolute inset-0 size-full object-cover opacity-70"
+              className="absolute inset-0 size-full object-contain object-center opacity-70"
             />
           ) : null}
           <div className="absolute inset-0 bg-gradient-to-t from-neutral-950/80 to-neutral-950/20" />

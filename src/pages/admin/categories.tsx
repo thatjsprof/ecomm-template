@@ -119,7 +119,7 @@ export default function AdminCategoriesPage() {
                     <img
                       src={image}
                       alt="Category preview"
-                      className="h-40 w-full object-cover"
+                      className="h-40 w-full object-contain object-center"
                     />
                     <Button
                       type="button"
@@ -154,7 +154,7 @@ export default function AdminCategoriesPage() {
                   <img
                     src={category.image}
                     alt={category.name}
-                    className="size-full object-cover"
+                    className="size-full object-contain object-center"
                   />
                 ) : null}
               </div>

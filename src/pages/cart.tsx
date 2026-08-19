@@ -38,7 +38,7 @@ export default function CartPage() {
             >
               <div className="relative h-28 w-24 overflow-hidden rounded-xl bg-neutral-100">
                 {image ? (
-                  <Image src={image} alt={item.product.name} fill className="object-cover" sizes="96px" />
+                  <Image src={image} alt={item.product.name} fill className="object-contain object-center" sizes="96px" />
                 ) : null}
               </div>
               <div className="flex-1">

@@ -385,7 +385,7 @@ export function ProductOptionsEditor({
                     {entry.image ? (
                       <>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={entry.image} alt="" className="size-full object-cover" />
+                        <img src={entry.image} alt="" className="size-full object-contain object-center" />
                         <span className="absolute inset-x-0 bottom-0 bg-black/55 text-[8px] leading-3 text-white">
                           Change
                         </span>
@@ -599,7 +599,7 @@ export function ProductOptionsEditor({
                         className="relative aspect-square overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50 hover:ring-2 hover:ring-neutral-900"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt="" className="size-full object-cover" />
+                        <img src={url} alt="" className="size-full object-contain object-center" />
                       </button>
                     ))}
                   </div>

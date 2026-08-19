@@ -183,7 +183,7 @@ export default function AdminCollectionsPage() {
                 {form.image && (
                   <div className="relative mt-2 overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={form.image} alt="" className="h-40 w-full object-cover" />
+                    <img src={form.image} alt="" className="h-40 w-full object-contain object-center" />
                   </div>
                 )}
               </div>
@@ -263,7 +263,7 @@ export default function AdminCollectionsPage() {
             <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
               {collection.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={collection.image} alt="" className="size-full object-cover" />
+                <img src={collection.image} alt="" className="size-full object-contain object-center" />
               ) : null}
             </div>
             <div className="min-w-0 flex-1">
