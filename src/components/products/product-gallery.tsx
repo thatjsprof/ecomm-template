@@ -320,7 +320,7 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
                   src={img}
                   alt={`${alt} ${wrapIndex(looping ? index - 1 : index, n) + 1}`}
                   fill
-                  className="object-contain object-center"
+                  className="object-cover object-center"
                   sizes="(max-width: 1024px) 100vw, 50vw"
                   priority={index === (looping ? 1 : 0)}
                 />
@@ -398,7 +398,7 @@ export function ProductGallery({ images, alt, focusImageUrl }: ProductGalleryPro
                   )}
                 >
                   <span className="relative block size-full overflow-hidden rounded-md">
-                    <Image src={img} alt="" fill className="object-contain" sizes="64px" />
+                    <Image src={img} alt="" fill className="object-cover" sizes="64px" />
                   </span>
                 </button>
               ))}

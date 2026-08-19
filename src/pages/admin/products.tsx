@@ -333,7 +333,7 @@ export default function AdminProductsPage() {
                         )}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt="" className="pointer-events-none size-full object-contain object-center" />
+                        <img src={url} alt="" className="pointer-events-none size-full object-cover" />
                         {index === 0 ? (
                           <span className="pointer-events-none absolute left-1 top-1 rounded bg-black/70 px-1 text-[9px] font-medium uppercase tracking-wide text-white">
                             Cover
@@ -461,7 +461,7 @@ export default function AdminProductsPage() {
                         <img
                           src={product.images[0]}
                           alt={product.name}
-                          className="size-full object-contain object-center"
+                          className="size-full object-cover"
                         />
                       ) : null}
                     </div>
