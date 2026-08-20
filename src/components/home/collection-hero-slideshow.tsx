@@ -56,11 +56,7 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
   const ctaLabel = current.ctaLabel?.trim() || "Shop Now";
 
   return (
-    <section
-      className="relative min-h-dvh bg-neutral-900"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
+    <section className="relative min-h-dvh bg-neutral-900">
       <div className="absolute inset-0 overflow-hidden">
         {slides.map((slide, i) => (
           <Link
@@ -95,6 +91,8 @@ export function CollectionHeroSlideshow({ collections }: CollectionHeroSlideshow
           <div className="pointer-events-auto mt-8 animate-in fade-in fill-mode-both duration-700 delay-500">
             <Link
               href={`/collections/${current.slug}`}
+              onMouseEnter={() => setPaused(true)}
+              onMouseLeave={() => setPaused(false)}
               className={cn(
                 buttonVariants({ size: "lg", variant: "secondary" }),
                 "h-14 rounded-lg bg-white px-10 text-base font-bold uppercase tracking-wide text-neutral-900 hover:bg-white/90"

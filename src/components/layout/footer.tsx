@@ -86,9 +86,13 @@ export function Footer() {
               placeholder="Email address"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="border-neutral-700 bg-neutral-900 text-white placeholder:text-neutral-500"
+              className="border-neutral-700 bg-neutral-900 text-white placeholder:text-neutral-500 focus-visible:border-white"
             />
-            <Button type="submit" disabled={loading}>
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-white text-neutral-900 hover:bg-white/90"
+            >
               Join
             </Button>
           </form>
