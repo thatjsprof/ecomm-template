@@ -61,6 +61,14 @@ export const siteConfig = {
     phone: "",
   },
 
+  /** Manual bank transfer checkout option */
+  bankTransfer: {
+    enabled: true,
+    accountName: "Alurd Official Enterprises",
+    bankName: "Moniepoint Microfinance Bank",
+    accountNumber: "8109101306",
+  },
+
   /**
    * Floating WhatsApp chat button (bottom-right on storefront).
    * phone: country code + number, digits only preferred (e.g. "2348012345678")

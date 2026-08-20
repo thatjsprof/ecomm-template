@@ -300,6 +300,16 @@ export async function initPayment(provider: "flutterwave" | "korapay", orderId: 
   return data;
 }
 
+export async function uploadPaymentReceipt(file: File) {
+  const formData = new FormData();
+  formData.append("image", file);
+  const { data } = await api.post<ApiResponse<{ url: string; filename: string }>>(
+    "/upload/receipt",
+    formData
+  );
+  return data;
+}
+
 export async function verifyPayment(
   provider: string,
   reference: string,

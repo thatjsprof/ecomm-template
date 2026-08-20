@@ -150,6 +150,8 @@ export interface Order {
   paymentProvider: string | null;
   paymentReference: string | null;
   paymentStatus: PaymentStatus;
+  paymentReceiptUrl?: string | null;
+  paymentNote?: string | null;
   shippingAddress: ShippingAddress;
   customerEmail: string;
   customerName: string;

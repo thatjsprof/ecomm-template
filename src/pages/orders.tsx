@@ -70,7 +70,11 @@ export default function OrdersPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Badge variant="secondary">{order.status}</Badge>
+                  <Badge variant="secondary">
+                    {order.status === "PENDING" && order.paymentProvider === "bank_transfer"
+                      ? "AWAITING CONFIRMATION"
+                      : order.status}
+                  </Badge>
                   <p className="font-medium">{formatPrice(order.total)}</p>
                 </div>
               </div>

@@ -89,6 +89,13 @@ export default function AdminOrdersPage() {
                       Paid
                     </span>
                   )}
+                  {order.paymentStatus === "PENDING" &&
+                    order.paymentProvider === "bank_transfer" &&
+                    order.paymentReceiptUrl && (
+                      <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700">
+                        Awaiting confirmation
+                      </span>
+                    )}
                 </div>
                 <p className="mt-1 text-sm text-neutral-500">
                   {order.customerName} · {order.customerEmail}
@@ -151,7 +158,29 @@ export default function AdminOrdersPage() {
               {order.paymentProvider && (
                 <p className="mt-2 text-neutral-500">
                   Payment ·{" "}
-                  <span className="capitalize text-neutral-700">{order.paymentProvider}</span>
+                  <span className="capitalize text-neutral-700">
+                    {order.paymentProvider.replace("_", " ")}
+                  </span>
+                  {order.paymentStatus === "PENDING" && order.paymentReceiptUrl
+                    ? " · Awaiting confirmation"
+                    : null}
+                </p>
+              )}
+              {order.paymentNote && (
+                <p className="mt-2 text-neutral-500">
+                  Note · <span className="text-neutral-700">{order.paymentNote}</span>
+                </p>
+              )}
+              {order.paymentReceiptUrl && (
+                <p className="mt-2">
+                  <a
+                    href={order.paymentReceiptUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm font-medium text-neutral-900 underline"
+                  >
+                    View payment receipt
+                  </a>
                 </p>
               )}
               {order.shippingAddress && (

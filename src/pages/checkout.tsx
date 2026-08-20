@@ -14,6 +14,7 @@ import {
   getMyOrders,
   getShippingOptions,
   initPayment,
+  uploadPaymentReceipt,
   validateCoupon,
 } from "@/services/api";
 import { PageHead } from "@/components/seo/page-head";
@@ -21,6 +22,14 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { formatPrice } from "@/utils/format";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
@@ -32,6 +41,15 @@ const PAYMENT_PROVIDERS = [
     label: "Korapay",
     logo: "/payments/korapay.png",
   },
+  ...(siteConfig.bankTransfer.enabled
+    ? [
+        {
+          value: "bank_transfer" as const,
+          label: "Bank Transfer",
+          logo: null as string | null,
+        },
+      ]
+    : []),
 ];
 
 const schema = z.object({
@@ -42,7 +60,7 @@ const schema = z.object({
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
   country: z.string().min(1, "Country is required"),
-  paymentProvider: z.enum(["korapay"]),
+  paymentProvider: z.enum(["korapay", "bank_transfer"]),
   shippingOptionId: z.string().min(1, "Shipping option is required"),
   couponCode: z.string().optional(),
   saveAddress: z.boolean().optional(),
@@ -134,7 +152,7 @@ function CheckoutPageSkeleton({ showSavedAddresses = false }: { showSavedAddress
 export default function CheckoutPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const { items, subtotal, ready: cartReady } = useCart();
+  const { items, subtotal, ready: cartReady, clearCart } = useCart();
   const [discount, setDiscount] = useState(0);
   const [couponApplied, setCouponApplied] = useState("");
   const [guestCheckout, setGuestCheckout] = useState(false);
@@ -143,6 +161,10 @@ export default function CheckoutPage() {
   const [selectedAddressId, setSelectedAddressId] = useState<string>("new");
   const [shippingLoading, setShippingLoading] = useState(true);
   const [addressesLoading, setAddressesLoading] = useState(false);
+  const [receiptOpen, setReceiptOpen] = useState(false);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptNote, setReceiptNote] = useState("");
+  const [submittingBank, setSubmittingBank] = useState(false);
 
   const {
     register,
@@ -309,6 +331,11 @@ export default function CheckoutPage() {
   }
 
   async function onSubmit(values: FormData) {
+    if (values.paymentProvider === "bank_transfer") {
+      setReceiptOpen(true);
+      return;
+    }
+
     try {
       const orderRes = await createOrder({
         items: items.map((i) => ({
@@ -345,6 +372,65 @@ export default function CheckoutPage() {
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Checkout failed");
     }
+  }
+
+  async function submitBankTransfer(values: FormData) {
+    if (!receiptFile) {
+      toast.error("Please upload your payment receipt");
+      return;
+    }
+
+    setSubmittingBank(true);
+    try {
+      const uploadRes = await uploadPaymentReceipt(receiptFile);
+      if (!uploadRes.success || !uploadRes.data?.url) {
+        throw new Error(uploadRes.message || "Failed to upload receipt");
+      }
+
+      const orderRes = await createOrder({
+        items: items.map((i) => ({
+          productId: i.product.id,
+          variantId: i.variant?.id || null,
+          quantity: i.quantity,
+        })),
+        shippingAddress: {
+          name: values.name,
+          email: values.email,
+          phone: values.phone,
+          address: values.address,
+          city: values.city,
+          state: values.state,
+          country: values.country,
+        },
+        paymentProvider: "bank_transfer",
+        couponCode: couponApplied || undefined,
+        shippingOptionId: values.shippingOptionId,
+        saveAddress: Boolean(user && values.saveAddress),
+        addressLabel: values.addressLabel || undefined,
+        paymentReceiptUrl: uploadRes.data.url,
+        paymentNote: receiptNote.trim() || undefined,
+      });
+
+      if (!orderRes.success || !orderRes.data) {
+        throw new Error(orderRes.message || "Failed to create order");
+      }
+
+      clearCart();
+      setReceiptOpen(false);
+      toast.success("Order submitted — awaiting payment confirmation");
+      router.push(
+        `/payment/pending?order=${encodeURIComponent(orderRes.data.orderNumber)}`
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Checkout failed");
+    } finally {
+      setSubmittingBank(false);
+    }
+  }
+
+  function copyAccountNumber() {
+    void navigator.clipboard.writeText(siteConfig.bankTransfer.accountNumber);
+    toast.success("Account number copied");
   }
 
   if (!cartReady || items.length === 0) {
@@ -587,34 +673,96 @@ export default function CheckoutPage() {
           </div>
 
           <div>
-            <Label className="mb-3 block">Payment method</Label>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {PAYMENT_PROVIDERS.map((provider) => (
-                <label
-                  key={provider.value}
-                  className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-4 text-sm transition-colors",
-                    paymentProvider === provider.value
-                      ? "border-neutral-900 bg-neutral-50"
-                      : "border-neutral-200 hover:border-neutral-400"
-                  )}
-                >
-                  <input
-                    type="radio"
-                    value={provider.value}
-                    className="shrink-0"
-                    {...register("paymentProvider")}
-                  />
-                  <Image
-                    src={provider.logo}
-                    alt={provider.label}
-                    width={800}
-                    height={375}
-                    className="h-7 w-auto object-contain"
-                  />
-                  <span className="font-medium text-neutral-900">{provider.label}</span>
-                </label>
-              ))}
+            <Label className="mb-1 block">Payment</Label>
+            <p className="mb-3 text-xs text-neutral-500">
+              All transactions are secure and encrypted.
+            </p>
+            <p className="mb-3 text-sm font-medium text-neutral-900">
+              Total amount due: {formatPrice(total)}
+            </p>
+            <div className="overflow-hidden rounded-xl border border-neutral-200">
+              {PAYMENT_PROVIDERS.map((provider, index) => {
+                const selected = paymentProvider === provider.value;
+                return (
+                  <div
+                    key={provider.value}
+                    className={cn(
+                      index > 0 && "border-t border-neutral-200",
+                      selected && "bg-neutral-50"
+                    )}
+                  >
+                    <label className="flex cursor-pointer items-center justify-between gap-3 px-4 py-4 text-sm">
+                      <span className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          value={provider.value}
+                          className="shrink-0"
+                          {...register("paymentProvider")}
+                        />
+                        <span className="font-medium text-neutral-900">{provider.label}</span>
+                      </span>
+                      {provider.logo ? (
+                        <Image
+                          src={provider.logo}
+                          alt={provider.label}
+                          width={800}
+                          height={375}
+                          className="h-6 w-auto object-contain"
+                        />
+                      ) : (
+                        <span className="rounded bg-neutral-900 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
+                          Bank
+                        </span>
+                      )}
+                    </label>
+
+                    {provider.value === "bank_transfer" && selected && (
+                      <div className="border-t border-neutral-200 bg-white px-4 py-4 text-sm">
+                        <p className="text-neutral-600">
+                          Kindly transfer exactly{" "}
+                          <span className="font-semibold text-neutral-900">
+                            {formatPrice(total)}
+                          </span>{" "}
+                          to the following bank account.
+                        </p>
+                        <dl className="mt-4 space-y-2">
+                          <div className="flex flex-wrap justify-between gap-2">
+                            <dt className="text-neutral-500">Account Name</dt>
+                            <dd className="font-medium text-neutral-900">
+                              {siteConfig.bankTransfer.accountName}
+                            </dd>
+                          </div>
+                          <div className="flex flex-wrap justify-between gap-2">
+                            <dt className="text-neutral-500">Bank Name</dt>
+                            <dd className="font-medium text-neutral-900">
+                              {siteConfig.bankTransfer.bankName}
+                            </dd>
+                          </div>
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <dt className="text-neutral-500">Account Number</dt>
+                            <dd className="flex items-center gap-2 font-medium text-neutral-900">
+                              {siteConfig.bankTransfer.accountNumber}
+                              <button
+                                type="button"
+                                onClick={copyAccountNumber}
+                                className="text-xs font-normal text-neutral-500 underline hover:text-neutral-900"
+                              >
+                                Copy
+                              </button>
+                            </dd>
+                          </div>
+                        </dl>
+                        <p className="mt-4 text-xs leading-relaxed text-neutral-500">
+                          Once you have made the transfer, click &quot;I have made the
+                          transfer&quot;. You will be required to provide proof of payment.
+                          Your order is only created after the receipt is submitted, and an
+                          admin will confirm payment before fulfillment.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -671,10 +819,79 @@ export default function CheckoutPage() {
             className="mt-6 w-full rounded-lg"
             disabled={isSubmitting || shippingLoading || !shippingOptionId}
           >
-            {isSubmitting ? "Processing…" : `Pay with ${selectedPayment.label}`}
+            {isSubmitting
+              ? "Processing…"
+              : paymentProvider === "bank_transfer"
+                ? "I have made the transfer"
+                : `Pay with ${selectedPayment.label}`}
           </Button>
         </div>
       </form>
+
+      <Dialog
+        open={receiptOpen}
+        onOpenChange={(open) => {
+          if (submittingBank) return;
+          setReceiptOpen(open);
+          if (!open) {
+            setReceiptFile(null);
+            setReceiptNote("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md" showCloseButton={!submittingBank}>
+          <DialogHeader>
+            <DialogTitle>Proof of payment</DialogTitle>
+            <DialogDescription>
+              Upload your transfer receipt. Your order will be created after this and an admin
+              will confirm payment.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="receipt">Receipt (image or PDF)</Label>
+              <Input
+                id="receipt"
+                type="file"
+                accept="image/*,.pdf,application/pdf"
+                onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+              />
+              {receiptFile && (
+                <p className="text-xs text-neutral-500">{receiptFile.name}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="receiptNote">Note (optional)</Label>
+              <Input
+                id="receiptNote"
+                placeholder="Payer name or transfer reference"
+                value={receiptNote}
+                onChange={(e) => setReceiptNote(e.target.value)}
+              />
+            </div>
+            <p className="text-xs text-neutral-500">
+              Amount due: <span className="font-medium text-neutral-900">{formatPrice(total)}</span>
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={submittingBank}
+              onClick={() => setReceiptOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={submittingBank || !receiptFile}
+              onClick={handleSubmit(submitBankTransfer)}
+            >
+              {submittingBank ? "Submitting…" : "Submit receipt"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
