@@ -608,8 +608,8 @@ export default function CheckoutPage() {
                   <Image
                     src={provider.logo}
                     alt={provider.label}
-                    width={646}
-                    height={303}
+                    width={800}
+                    height={375}
                     className="h-7 w-auto object-contain"
                   />
                   <span className="font-medium text-neutral-900">{provider.label}</span>
