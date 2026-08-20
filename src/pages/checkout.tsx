@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
@@ -24,6 +25,14 @@ import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 import type { SavedAddress, ShippingOption } from "@/types";
 
+const PAYMENT_PROVIDERS = [
+  {
+    value: "korapay" as const,
+    label: "Korapay",
+    logo: "/payments/korapay.png",
+  },
+];
+
 const schema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().min(1, "Email is required").email("Invalid email"),
@@ -32,7 +41,7 @@ const schema = z.object({
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
   country: z.string().min(1, "Country is required"),
-  paymentProvider: z.literal("korapay"),
+  paymentProvider: z.enum(["korapay"]),
   shippingOptionId: z.string().min(1, "Shipping option is required"),
   couponCode: z.string().optional(),
   saveAddress: z.boolean().optional(),
@@ -248,7 +257,11 @@ export default function CheckoutPage() {
   }, [user, setValue]);
 
   const shippingOptionId = watch("shippingOptionId");
+  const paymentProvider = watch("paymentProvider");
   const saveAddress = watch("saveAddress");
+  const selectedPayment =
+    PAYMENT_PROVIDERS.find((provider) => provider.value === paymentProvider) ||
+    PAYMENT_PROVIDERS[0];
   const selectedShipping =
     shippingOptions.find((option) => option.id === shippingOptionId) || null;
   const shipping = selectedShipping?.price ?? 0;
@@ -569,7 +582,37 @@ export default function CheckoutPage() {
             )}
           </div>
 
-          <input type="hidden" value="korapay" {...register("paymentProvider")} />
+          <div>
+            <Label className="mb-3 block">Payment method</Label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {PAYMENT_PROVIDERS.map((provider) => (
+                <label
+                  key={provider.value}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-4 text-sm transition-colors",
+                    paymentProvider === provider.value
+                      ? "border-neutral-900 bg-neutral-50"
+                      : "border-neutral-200 hover:border-neutral-400"
+                  )}
+                >
+                  <input
+                    type="radio"
+                    value={provider.value}
+                    className="shrink-0"
+                    {...register("paymentProvider")}
+                  />
+                  <Image
+                    src={provider.logo}
+                    alt={provider.label}
+                    width={646}
+                    height={303}
+                    className="h-7 w-auto object-contain"
+                  />
+                  <span className="font-medium text-neutral-900">{provider.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
         </div>
 
         <div className="self-start rounded-2xl border border-neutral-200 bg-neutral-50 p-6 lg:col-span-2">
@@ -624,7 +667,7 @@ export default function CheckoutPage() {
             className="mt-6 w-full rounded-lg"
             disabled={isSubmitting || shippingLoading || !shippingOptionId}
           >
-            {isSubmitting ? "Processing…" : "Pay with Korapay"}
+            {isSubmitting ? "Processing…" : `Pay with ${selectedPayment.label}`}
           </Button>
         </div>
       </form>
