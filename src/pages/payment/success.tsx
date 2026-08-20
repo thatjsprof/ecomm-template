@@ -60,7 +60,7 @@ export default function PaymentSuccessPage() {
 
   return (
     <>
-      <PageHead title="Payment" />
+      <PageHead title="Payment" noindex path="/payment/success" />
       <div className="mx-auto flex min-h-[60vh] max-w-lg items-center justify-center px-6 py-20">
         {status === "loading" || !router.isReady || authLoading ? (
           <p className="text-sm text-neutral-500">Confirming payment…</p>

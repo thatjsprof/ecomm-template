@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { PageHead } from "@/components/seo/page-head";
 import { useAuth } from "@/hooks/use-auth";
 import {
   changePassword,
@@ -198,11 +199,17 @@ export default function ProfilePage() {
   }
 
   if (loading || !user) {
-    return <p className="py-24 text-center text-sm text-neutral-500">Loading…</p>;
+    return (
+      <>
+        <PageHead title="Profile" noindex path="/profile" />
+        <p className="py-24 text-center text-sm text-neutral-500">Loading…</p>
+      </>
+    );
   }
 
   return (
     <div className="mx-auto max-w-lg px-6 py-12 lg:px-8">
+      <PageHead title="Profile" noindex path="/profile" />
       <Link
         href="/dashboard"
         className="inline-flex items-center gap-1 text-sm text-neutral-500 transition-colors hover:text-neutral-900"

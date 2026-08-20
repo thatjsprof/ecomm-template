@@ -5,6 +5,7 @@ import { CollectionHeroSlideshow } from "@/components/home/collection-hero-slide
 import { PageHead } from "@/components/seo/page-head";
 import { buttonVariants } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
+import { organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { getCategories, getCollections, getProducts } from "@/services/api";
 import type { Category, Collection, Product } from "@/types";
 import { cn } from "@/lib/utils";
@@ -56,7 +57,13 @@ export default function HomePage({
 
   return (
     <>
-      <PageHead absolute title={`${siteConfig.name} — ${siteConfig.tagline}`} />
+      <PageHead
+        absolute
+        title={`${siteConfig.name} — ${siteConfig.tagline}`}
+        description={siteConfig.description}
+        path="/"
+        jsonLd={[organizationJsonLd(), websiteJsonLd()]}
+      />
       <div>
         {useSlideshow ? (
           <CollectionHeroSlideshow collections={heroCollections} />

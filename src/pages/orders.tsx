@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { PageHead } from "@/components/seo/page-head";
 import { useAuth } from "@/hooks/use-auth";
 import { getMyOrders } from "@/services/api";
 import type { Order } from "@/types";
@@ -27,11 +28,17 @@ export default function OrdersPage() {
   }, [user]);
 
   if (authLoading || loading) {
-    return <p className="py-24 text-center text-sm text-neutral-500">Loading…</p>;
+    return (
+      <>
+        <PageHead title="Orders" noindex path="/orders" />
+        <p className="py-24 text-center text-sm text-neutral-500">Loading…</p>
+      </>
+    );
   }
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12 lg:px-8">
+      <PageHead title="Orders" noindex path="/orders" />
       <Link
         href="/dashboard"
         className="inline-flex items-center gap-1 text-sm text-neutral-500 transition-colors hover:text-neutral-900"

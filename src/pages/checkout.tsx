@@ -16,6 +16,7 @@ import {
   initPayment,
   validateCoupon,
 } from "@/services/api";
+import { PageHead } from "@/components/seo/page-head";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -107,6 +108,7 @@ function ShippingOptionsSkeleton() {
 function CheckoutPageSkeleton({ showSavedAddresses = false }: { showSavedAddresses?: boolean }) {
   return (
     <div className="mx-auto max-w-5xl px-6 py-12 lg:px-8">
+      <PageHead title="Checkout" noindex path="/checkout" />
       <Skeleton className="h-10 w-40" />
       <Skeleton className="mt-2 h-4 w-full max-w-md" />
       <div className="mt-10 grid gap-12 lg:grid-cols-5">
@@ -356,6 +358,7 @@ export default function CheckoutPage() {
   if (showAccountPrompt) {
     return (
       <div className="mx-auto max-w-lg px-6 py-16 lg:px-8">
+        <PageHead title="Checkout" noindex path="/checkout" />
         <h1 className="font-display text-4xl text-neutral-900">Checkout</h1>
         <p className="mt-3 text-sm leading-relaxed text-neutral-500">
           Sign in to use a saved shipping address, or continue as a guest. You can always enter a
@@ -402,6 +405,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-12 lg:px-8">
+      <PageHead title="Checkout" noindex path="/checkout" />
       <h1 className="font-display text-4xl text-neutral-900">Checkout</h1>
       {user ? (
         <p className="mt-2 text-sm text-neutral-500">

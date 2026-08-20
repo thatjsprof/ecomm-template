@@ -5,6 +5,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { PageHead } from "@/components/seo/page-head";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +43,7 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-16">
+      <PageHead title="Sign in" noindex path="/login" />
       <h1 className="font-display text-4xl text-neutral-900">Sign in</h1>
       <p className="mt-2 text-sm text-neutral-500">
         New here?{" "}

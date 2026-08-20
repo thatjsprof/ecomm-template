@@ -13,10 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { siteConfig } from "@/config/site";
 import { getCategories, getCollection } from "@/services/api";
 import type { Category, Collection, Product } from "@/types";
 import { cn } from "@/lib/utils";
 import { getProductPrice } from "@/utils/format";
+import { breadcrumbJsonLd, collectionJsonLd, metaDescription } from "@/lib/seo";
 
 interface CollectionPageProps {
   collection: Collection | null;
@@ -161,6 +163,7 @@ export default function CollectionPage({ collection }: CollectionPageProps) {
   if (!collection) {
     return (
       <div className="mx-auto max-w-4xl px-6 py-24 text-center lg:px-8">
+        <PageHead title="Collection not found" noindex path={`/collections/${slug || ""}`} />
         <h1 className="font-display text-3xl">Collection not found</h1>
         <Link href="/shop" className="mt-4 inline-block text-sm underline">
           Back to shop
@@ -171,14 +174,30 @@ export default function CollectionPage({ collection }: CollectionPageProps) {
 
   return (
     <>
-      <PageHead title={collection.name} description={collection.description || undefined} />
+      <PageHead
+        title={collection.name}
+        description={
+          collection.description
+            ? metaDescription(collection.description)
+            : `Shop the ${collection.name} collection at ${siteConfig.name}.`
+        }
+        path={`/collections/${collection.slug}`}
+        image={collection.image}
+        jsonLd={[
+          collectionJsonLd(collection.name, `/collections/${collection.slug}`, collection.description),
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: collection.name, path: `/collections/${collection.slug}` },
+          ]),
+        ]}
+      />
       <div>
         <section className="relative min-h-[42vh] overflow-hidden bg-neutral-900">
           {collection.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={collection.image}
-              alt=""
+              alt={collection.name}
               className="absolute inset-0 size-full object-cover opacity-70"
             />
           ) : null}

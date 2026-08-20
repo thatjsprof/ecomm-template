@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { PageHead } from "@/components/seo/page-head";
 import { forgotPassword } from "@/services/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-16">
+      <PageHead title="Forgot password" noindex path="/forgot-password" />
       <h1 className="font-display text-4xl text-neutral-900">Forgot password</h1>
       <p className="mt-2 text-sm text-neutral-500">
         Enter your email and we will send a reset link.

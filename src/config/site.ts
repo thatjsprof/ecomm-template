@@ -22,6 +22,9 @@ export const siteConfig = {
   /** Meta description / OG */
   description:
     "A curated selection of considered essentials. Quiet luxury for everyday living.",
+  /** Default Open Graph / Twitter image (absolute URL or site-relative path) */
+  ogImage:
+    "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80",
   /** Hero supporting line */
   heroTagline: "Considered essentials for a quieter kind of luxury.",
   /** Footer blurb */

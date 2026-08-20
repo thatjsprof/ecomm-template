@@ -9,6 +9,8 @@ import { useCart } from "@/hooks/use-cart";
 import { getProduct } from "@/services/api";
 import type { Product, ProductVariant } from "@/types";
 import { formatPrice, getProductPrice } from "@/utils/format";
+import { breadcrumbJsonLd, metaDescription, productJsonLd } from "@/lib/seo";
+import { siteConfig } from "@/config/site";
 
 export default function ProductDetailPage() {
   const router = useRouter();
@@ -94,11 +96,21 @@ export default function ProductDetailPage() {
   }
 
   if (loading) {
-    return <p className="py-24 text-center text-sm text-neutral-500">Loading…</p>;
+    return (
+      <>
+        <PageHead title="Product" />
+        <p className="py-24 text-center text-sm text-neutral-500">Loading…</p>
+      </>
+    );
   }
 
   if (!product) {
-    return <p className="py-24 text-center text-sm text-neutral-500">Product not found.</p>;
+    return (
+      <>
+        <PageHead title="Product not found" noindex path={slug ? `/shop/${slug}` : "/shop"} />
+        <p className="py-24 text-center text-sm text-neutral-500">Product not found.</p>
+      </>
+    );
   }
 
   const price = getProductPrice(product, selectedVariant);
@@ -124,7 +136,28 @@ export default function ProductDetailPage() {
 
   return (
     <>
-      <PageHead title={product.name} />
+      <PageHead
+        title={product.name}
+        description={
+          product.description
+            ? metaDescription(product.description)
+            : `Shop ${product.name} at ${siteConfig.name}.`
+        }
+        path={`/shop/${product.slug}`}
+        image={images[0]}
+        type="product"
+        jsonLd={[
+          productJsonLd(product),
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Shop", path: "/shop" },
+            ...(product.category
+              ? [{ name: product.category.name, path: `/shop?category=${product.category.slug}` }]
+              : []),
+            { name: product.name, path: `/shop/${product.slug}` },
+          ]),
+        ]}
+      />
       <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-2">
           <ProductGallery

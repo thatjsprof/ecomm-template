@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/hooks/use-cart";
+import { PageHead } from "@/components/seo/page-head";
 import { buttonVariants } from "@/components/ui/button";
 import { formatPrice, formatVariantLabel, getProductPrice } from "@/utils/format";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,7 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-24 text-center">
+        <PageHead title="Cart" noindex path="/cart" />
         <h1 className="font-display text-4xl text-neutral-900">Your cart</h1>
         <p className="mt-4 text-sm text-neutral-500">Your cart is empty.</p>
         <Link href="/shop" className={cn(buttonVariants(), "mt-8 rounded-lg")}>
@@ -22,6 +24,7 @@ export default function CartPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-12 lg:px-8">
+      <PageHead title="Cart" noindex path="/cart" />
       <h1 className="font-display text-4xl text-neutral-900">Your cart</h1>
 
       <div className="mt-10 space-y-6">

@@ -14,6 +14,8 @@ import {
 import { getCategories, getProducts } from "@/services/api";
 import type { Category, Pagination, Product } from "@/types";
 import { cn } from "@/lib/utils";
+import { breadcrumbJsonLd, collectionJsonLd } from "@/lib/seo";
+import { siteConfig } from "@/config/site";
 
 function queryValue(value: string | string[] | undefined): string {
   if (Array.isArray(value)) return value[0] || "";
@@ -125,13 +127,42 @@ export default function ShopPage() {
     applyFilters({ search: "", page: "" });
   }
 
+  const selectedCategory = categories.find((item) => item.slug === category);
+  const shopTitle = newArrival
+    ? "New arrivals"
+    : selectedCategory
+      ? selectedCategory.name
+      : "Shop";
+  const shopDescription = newArrival
+    ? `New arrivals from ${siteConfig.name}.`
+    : selectedCategory
+      ? `Shop ${selectedCategory.name} at ${siteConfig.name}.`
+      : "Browse the full collection.";
+  const shopPath = newArrival
+    ? "/shop?newArrival=true"
+    : selectedCategory
+      ? `/shop?category=${selectedCategory.slug}`
+      : "/shop";
+
   return (
     <>
-      <PageHead title="Shop" />
+      <PageHead
+        title={shopTitle}
+        description={shopDescription}
+        path={shopPath}
+        jsonLd={[
+          collectionJsonLd(shopTitle, shopPath, shopDescription),
+          breadcrumbJsonLd([
+            { name: "Home", path: "/" },
+            { name: "Shop", path: "/shop" },
+            ...(shopTitle !== "Shop" ? [{ name: shopTitle, path: shopPath }] : []),
+          ]),
+        ]}
+      />
       <div className="mx-auto max-w-7xl px-6 py-12 lg:px-8">
         <div className="mb-10">
-          <h1 className="font-display text-4xl text-neutral-900">Shop</h1>
-          <p className="mt-2 text-base text-neutral-500">Browse the full collection.</p>
+          <h1 className="font-display text-4xl text-neutral-900">{shopTitle}</h1>
+          <p className="mt-2 text-base text-neutral-500">{shopDescription}</p>
         </div>
 
         <div className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

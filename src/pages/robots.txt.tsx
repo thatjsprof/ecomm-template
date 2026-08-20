@@ -6,12 +6,17 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
 
   const body = `User-agent: *
 Allow: /
-Disallow: /admin/
-Disallow: /dashboard/
-Disallow: /checkout/
-Disallow: /cart/
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /checkout
+Disallow: /cart
+Disallow: /orders
+Disallow: /profile
+Disallow: /payment
+Disallow: /forgot-password
+Disallow: /reset-password
 
-Sitemap: ${siteUrl}/sitemap.xml
+Sitemap: ${siteUrl.replace(/\/$/, "")}/sitemap.xml
 `;
 
   res.setHeader("Content-Type", "text/plain");

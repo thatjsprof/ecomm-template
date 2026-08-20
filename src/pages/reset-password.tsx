@@ -51,7 +51,7 @@ export default function ResetPasswordPage() {
 
   return (
     <>
-      <PageHead title="Reset password" />
+      <PageHead title="Reset password" noindex path="/reset-password" />
       <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-6 py-16">
         <h1 className="font-display text-4xl text-neutral-900">Reset password</h1>
         <form onSubmit={handleSubmit(onSubmit)} className="mt-10 space-y-5">
