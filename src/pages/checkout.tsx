@@ -163,6 +163,8 @@ export default function CheckoutPage() {
   const [addressesLoading, setAddressesLoading] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [payerBank, setPayerBank] = useState("");
+  const [transferAmount, setTransferAmount] = useState("");
   const [receiptNote, setReceiptNote] = useState("");
   const [submittingBank, setSubmittingBank] = useState(false);
 
@@ -332,6 +334,7 @@ export default function CheckoutPage() {
 
   async function onSubmit(values: FormData) {
     if (values.paymentProvider === "bank_transfer") {
+      setTransferAmount((prev) => prev || String(total));
       setReceiptOpen(true);
       return;
     }
@@ -379,6 +382,15 @@ export default function CheckoutPage() {
       toast.error("Please upload your payment receipt");
       return;
     }
+    if (!payerBank.trim()) {
+      toast.error("Please enter the bank you transferred from");
+      return;
+    }
+    const amountValue = Number(transferAmount);
+    if (!transferAmount || !Number.isFinite(amountValue) || amountValue <= 0) {
+      toast.error("Please enter the amount transferred");
+      return;
+    }
 
     setSubmittingBank(true);
     try {
@@ -408,6 +420,8 @@ export default function CheckoutPage() {
         saveAddress: Boolean(user && values.saveAddress),
         addressLabel: values.addressLabel || undefined,
         paymentReceiptUrl: uploadRes.data.url,
+        paymentPayerBank: payerBank.trim(),
+        paymentAmount: amountValue,
         paymentNote: receiptNote.trim() || undefined,
       });
 
@@ -764,6 +778,17 @@ export default function CheckoutPage() {
                 );
               })}
             </div>
+            <Button
+              type="submit"
+              className="mt-4 w-full rounded-lg"
+              disabled={isSubmitting || shippingLoading || !shippingOptionId}
+            >
+              {isSubmitting
+                ? "Processing…"
+                : paymentProvider === "bank_transfer"
+                  ? "I have made the transfer"
+                  : `Pay with ${selectedPayment.label}`}
+            </Button>
           </div>
         </div>
 
@@ -813,18 +838,6 @@ export default function CheckoutPage() {
               <span>{formatPrice(total)}</span>
             </div>
           </div>
-
-          <Button
-            type="submit"
-            className="mt-6 w-full rounded-lg"
-            disabled={isSubmitting || shippingLoading || !shippingOptionId}
-          >
-            {isSubmitting
-              ? "Processing…"
-              : paymentProvider === "bank_transfer"
-                ? "I have made the transfer"
-                : `Pay with ${selectedPayment.label}`}
-          </Button>
         </div>
       </form>
 
@@ -835,6 +848,8 @@ export default function CheckoutPage() {
           setReceiptOpen(open);
           if (!open) {
             setReceiptFile(null);
+            setPayerBank("");
+            setTransferAmount("");
             setReceiptNote("");
           }
         }}
@@ -861,6 +876,27 @@ export default function CheckoutPage() {
               )}
             </div>
             <div className="space-y-2">
+              <Label htmlFor="payerBank">Bank transferred from</Label>
+              <Input
+                id="payerBank"
+                placeholder="e.g. GTBank, Access Bank"
+                value={payerBank}
+                onChange={(e) => setPayerBank(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="transferAmount">Amount transferred</Label>
+              <Input
+                id="transferAmount"
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder={String(total)}
+                value={transferAmount}
+                onChange={(e) => setTransferAmount(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="receiptNote">Note (optional)</Label>
               <Input
                 id="receiptNote"
@@ -884,7 +920,9 @@ export default function CheckoutPage() {
             </Button>
             <Button
               type="button"
-              disabled={submittingBank || !receiptFile}
+              disabled={
+                submittingBank || !receiptFile || !payerBank.trim() || !transferAmount
+              }
               onClick={handleSubmit(submitBankTransfer)}
             >
               {submittingBank ? "Submitting…" : "Submit receipt"}

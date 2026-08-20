@@ -151,6 +151,8 @@ export interface Order {
   paymentReference: string | null;
   paymentStatus: PaymentStatus;
   paymentReceiptUrl?: string | null;
+  paymentPayerBank?: string | null;
+  paymentAmount?: string | number | null;
   paymentNote?: string | null;
   shippingAddress: ShippingAddress;
   customerEmail: string;

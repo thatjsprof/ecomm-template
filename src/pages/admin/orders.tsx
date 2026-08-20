@@ -166,6 +166,20 @@ export default function AdminOrdersPage() {
                     : null}
                 </p>
               )}
+              {order.paymentPayerBank && (
+                <p className="mt-2 text-neutral-500">
+                  From bank ·{" "}
+                  <span className="text-neutral-700">{order.paymentPayerBank}</span>
+                </p>
+              )}
+              {order.paymentAmount != null && order.paymentAmount !== "" && (
+                <p className="mt-2 text-neutral-500">
+                  Amount transferred ·{" "}
+                  <span className="text-neutral-700">
+                    {formatPrice(order.paymentAmount)}
+                  </span>
+                </p>
+              )}
               {order.paymentNote && (
                 <p className="mt-2 text-neutral-500">
                   Note · <span className="text-neutral-700">{order.paymentNote}</span>
