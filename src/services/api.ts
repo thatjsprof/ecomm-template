@@ -209,6 +209,7 @@ export async function createShippingOption(payload: {
   price: number;
   active?: boolean;
   sortOrder?: number;
+  states?: string[];
 }) {
   const { data } = await api.post<ApiResponse<ShippingOption>>("/shipping", payload);
   return data;
@@ -222,6 +223,7 @@ export async function updateShippingOption(
     price?: number;
     active?: boolean;
     sortOrder?: number;
+    states?: string[];
   }
 ) {
   const { data } = await api.put<ApiResponse<ShippingOption>>(`/shipping/${id}`, payload);

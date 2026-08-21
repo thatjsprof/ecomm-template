@@ -132,6 +132,7 @@ export interface ShippingOption {
   price: number;
   active?: boolean;
   sortOrder?: number;
+  states?: string[];
   createdAt?: string;
   updatedAt?: string;
 }

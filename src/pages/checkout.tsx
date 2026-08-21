@@ -32,8 +32,16 @@ import {
 } from "@/components/ui/dialog";
 import { formatPrice } from "@/utils/format";
 import { siteConfig } from "@/config/site";
+import { NIGERIA, nigerianStateItems, preferredShippingOption, preferredShippingOptionId } from "@/lib/nigeria";
 import { cn } from "@/lib/utils";
 import type { SavedAddress, ShippingOption } from "@/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const PAYMENT_PROVIDERS = [
   {
@@ -178,7 +186,7 @@ export default function CheckoutPage() {
     resolver: zodResolver(schema),
     defaultValues: {
       paymentProvider: "korapay",
-      country: siteConfig.defaultCountry,
+      country: NIGERIA,
       shippingOptionId: "",
       saveAddress: true,
       addressLabel: "",
@@ -200,7 +208,6 @@ export default function CheckoutPage() {
       .then((res) => {
         if (cancelled || !res.success || !res.data?.options?.length) return;
         setShippingOptions(res.data.options);
-        setValue("shippingOptionId", res.data.options[0].id);
       })
       .catch(() => {
         toast.error("Could not load shipping options");
@@ -229,7 +236,7 @@ export default function CheckoutPage() {
     if (row.address) setValue("address", row.address);
     if (row.city) setValue("city", row.city);
     if (row.state) setValue("state", row.state);
-    if (row.country) setValue("country", row.country);
+    setValue("country", NIGERIA);
   }
 
   useEffect(() => {
@@ -285,11 +292,29 @@ export default function CheckoutPage() {
   const shippingOptionId = watch("shippingOptionId");
   const paymentProvider = watch("paymentProvider");
   const saveAddress = watch("saveAddress");
+  const selectedState = watch("state");
   const selectedPayment =
     PAYMENT_PROVIDERS.find((provider) => provider.value === paymentProvider) ||
     PAYMENT_PROVIDERS[0];
-  const selectedShipping =
-    shippingOptions.find((option) => option.id === shippingOptionId) || null;
+  const selectedShipping = selectedState
+    ? preferredShippingOption(shippingOptions, selectedState)
+    : null;
+
+  useEffect(() => {
+    if (shippingLoading) return;
+    if (!selectedState) {
+      if (shippingOptionId) setValue("shippingOptionId", "");
+      return;
+    }
+    const nextId = preferredShippingOptionId(
+      shippingOptions,
+      selectedState,
+      shippingOptionId
+    );
+    if (nextId !== shippingOptionId) {
+      setValue("shippingOptionId", nextId, { shouldValidate: true });
+    }
+  }, [selectedState, shippingOptions, shippingLoading, shippingOptionId, setValue]);
   const shipping = selectedShipping?.price ?? 0;
   const total = Math.max(0, subtotal - discount + shipping);
   const showAccountPrompt = !authLoading && !user && !guestCheckout;
@@ -302,7 +327,7 @@ export default function CheckoutPage() {
       setValue("address", "");
       setValue("city", "");
       setValue("state", "");
-      setValue("country", siteConfig.defaultCountry);
+      setValue("country", NIGERIA);
       setValue("name", user?.name || "");
       setValue("email", user?.email || "");
       setValue("saveAddress", true);
@@ -353,7 +378,7 @@ export default function CheckoutPage() {
           address: values.address,
           city: values.city,
           state: values.state,
-          country: values.country,
+          country: NIGERIA,
         },
         paymentProvider: values.paymentProvider,
         couponCode: couponApplied || undefined,
@@ -412,7 +437,7 @@ export default function CheckoutPage() {
           address: values.address,
           city: values.city,
           state: values.state,
-          country: values.country,
+          country: NIGERIA,
         },
         paymentProvider: "bank_transfer",
         couponCode: couponApplied || undefined,
@@ -620,13 +645,42 @@ export default function CheckoutPage() {
             </div>
             <div className="space-y-2">
               <Label>State</Label>
-              <Input {...register("state")} />
+              <input type="hidden" {...register("state")} />
+              <Select
+                value={selectedState || null}
+                onValueChange={(value) =>
+                  value && setValue("state", String(value), { shouldValidate: true })
+                }
+                items={nigerianStateItems(selectedState)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select state" />
+                </SelectTrigger>
+                <SelectContent>
+                  {nigerianStateItems(selectedState).map((state) => (
+                    <SelectItem key={state.value} value={state.value}>
+                      {state.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {errors.state && <p className="text-xs text-red-500">{errors.state.message}</p>}
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label>Country</Label>
-              <Input {...register("country")} />
-              {errors.country && <p className="text-xs text-red-500">{errors.country.message}</p>}
+              <input type="hidden" {...register("country")} />
+              <Select
+                value={NIGERIA}
+                disabled
+                items={[{ value: NIGERIA, label: NIGERIA }]}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NIGERIA}>{NIGERIA}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           )}
@@ -650,35 +704,30 @@ export default function CheckoutPage() {
             <Label className="mb-3 block">Shipping</Label>
             {shippingLoading ? (
               <ShippingOptionsSkeleton />
-            ) : shippingOptions.length === 0 ? (
-              <p className="text-sm text-neutral-500">No shipping options available.</p>
+            ) : !selectedState ? (
+              <p className="text-sm text-neutral-500">
+                Select a state to see delivery options.
+              </p>
+            ) : !selectedShipping ? (
+              <p className="text-sm text-neutral-500">
+                No shipping options available for {selectedState}.
+              </p>
             ) : (
-              <div className="space-y-3">
-                {shippingOptions.map((option) => (
-                  <label
-                    key={option.id}
-                    className={`flex cursor-pointer items-start justify-between gap-4 rounded-xl border px-4 py-4 text-sm transition-colors ${shippingOptionId === option.id
-                        ? "border-neutral-900 bg-neutral-50"
-                        : "border-neutral-200 hover:border-neutral-400"
-                      }`}
-                  >
-                    <span className="flex items-start gap-2">
-                      <input
-                        type="radio"
-                        value={option.id}
-                        className="mt-0.5"
-                        {...register("shippingOptionId")}
-                      />
-                      <span>
-                        <span className="block font-medium text-neutral-900">{option.name}</span>
-                        <span className="mt-0.5 block text-neutral-500">{option.description}</span>
-                      </span>
+              <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-4 text-sm">
+                <input type="hidden" {...register("shippingOptionId")} />
+                <div className="flex items-start justify-between gap-4">
+                  <span>
+                    <span className="block font-medium text-neutral-900">
+                      {selectedShipping.name}
                     </span>
-                    <span className="shrink-0 font-medium text-neutral-900">
-                      {option.price === 0 ? "Free" : formatPrice(option.price)}
+                    <span className="mt-0.5 block text-neutral-500">
+                      {selectedShipping.description}
                     </span>
-                  </label>
-                ))}
+                  </span>
+                  <span className="shrink-0 font-medium text-neutral-900">
+                    {selectedShipping.price === 0 ? "Free" : formatPrice(selectedShipping.price)}
+                  </span>
+                </div>
               </div>
             )}
             {errors.shippingOptionId && (

@@ -19,7 +19,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { siteConfig } from "@/config/site";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { NIGERIA, nigerianStateItems } from "@/lib/nigeria";
 import type { SavedAddress } from "@/types";
 
 const profileSchema = z.object({
@@ -71,7 +78,7 @@ export default function ProfilePage() {
   const addressForm = useForm<AddressForm>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
-      country: siteConfig.defaultCountry,
+      country: NIGERIA,
       isDefault: false,
     },
   });
@@ -125,7 +132,7 @@ export default function ProfilePage() {
       address: "",
       city: "",
       state: "",
-      country: siteConfig.defaultCountry,
+      country: NIGERIA,
       isDefault: addresses.length === 0,
     });
   }
@@ -140,7 +147,7 @@ export default function ProfilePage() {
       address: row.address,
       city: row.city,
       state: row.state,
-      country: row.country,
+      country: NIGERIA,
       isDefault: row.isDefault,
     });
   }
@@ -154,7 +161,7 @@ export default function ProfilePage() {
         address: values.address,
         city: values.city,
         state: values.state,
-        country: values.country,
+        country: NIGERIA,
         isDefault: values.isDefault,
       };
 
@@ -361,7 +368,26 @@ export default function ProfilePage() {
               </div>
               <div className="space-y-2">
                 <Label>State</Label>
-                <Input {...addressForm.register("state")} />
+                <input type="hidden" {...addressForm.register("state")} />
+                <Select
+                  value={addressForm.watch("state") || null}
+                  onValueChange={(value) =>
+                    value &&
+                    addressForm.setValue("state", String(value), { shouldValidate: true })
+                  }
+                  items={nigerianStateItems(addressForm.watch("state"))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {nigerianStateItems(addressForm.watch("state")).map((state) => (
+                      <SelectItem key={state.value} value={state.value}>
+                        {state.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {addressForm.formState.errors.state && (
                   <p className="text-xs text-red-500">
                     {addressForm.formState.errors.state.message}
@@ -371,12 +397,19 @@ export default function ProfilePage() {
             </div>
             <div className="space-y-2">
               <Label>Country</Label>
-              <Input {...addressForm.register("country")} />
-              {addressForm.formState.errors.country && (
-                <p className="text-xs text-red-500">
-                  {addressForm.formState.errors.country.message}
-                </p>
-              )}
+              <input type="hidden" {...addressForm.register("country")} />
+              <Select
+                value={NIGERIA}
+                disabled
+                items={[{ value: NIGERIA, label: NIGERIA }]}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NIGERIA}>{NIGERIA}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <label className="flex items-center gap-2 text-sm text-neutral-700">
               <input type="checkbox" {...addressForm.register("isDefault")} />

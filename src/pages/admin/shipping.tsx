@@ -10,6 +10,7 @@ import {
 import type { ShippingOption } from "@/types";
 import { formatPrice } from "@/utils/format";
 import { cn } from "@/lib/utils";
+import { NIGERIAN_STATES } from "@/lib/nigeria";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +27,8 @@ const emptyForm = {
   description: "",
   price: "0",
   active: true,
+  nationwide: true,
+  states: [] as string[],
 };
 
 function moveOption(options: ShippingOption[], from: number, to: number) {
@@ -61,6 +64,8 @@ export default function AdminShippingPage() {
       description: option.description || "",
       price: String(option.price),
       active: option.active !== false,
+      nationwide: !(option.states && option.states.length > 0),
+      states: option.states || [],
     });
     setOpen(true);
   }
@@ -71,11 +76,17 @@ export default function AdminShippingPage() {
       return;
     }
 
+    if (!form.nationwide && form.states.length === 0) {
+      toast.error("Select at least one state, or make this option nationwide");
+      return;
+    }
+
     const payload = {
       name: form.name.trim(),
       description: form.description.trim(),
       price: Number(form.price) || 0,
       active: form.active,
+      states: form.nationwide ? [] : form.states,
     };
 
     try {
@@ -155,7 +166,8 @@ export default function AdminShippingPage() {
         <div>
           <h1 className="font-display text-3xl">Shipping</h1>
           <p className="mt-1 text-sm text-neutral-500">
-            Methods and prices shown at checkout. Drag rows to reorder.
+            Methods, prices, and states are stored on each option. Assign states here when you add
+            a new method. Drag rows to reorder.
           </p>
         </div>
         <Dialog
@@ -178,7 +190,7 @@ export default function AdminShippingPage() {
               Add option
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>{editing ? "Edit shipping option" : "New shipping option"}</DialogTitle>
             </DialogHeader>
@@ -216,6 +228,59 @@ export default function AdminShippingPage() {
                 />
                 Active (shown at checkout)
               </label>
+              <label className="flex items-center gap-2 text-sm text-neutral-700">
+                <input
+                  type="checkbox"
+                  checked={form.nationwide}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      nationwide: e.target.checked,
+                      states: e.target.checked ? [] : form.states,
+                    })
+                  }
+                />
+                Available nationwide
+              </label>
+              {!form.nationwide && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>States</Label>
+                    <button
+                      type="button"
+                      className="text-xs text-neutral-500 underline"
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          states:
+                            form.states.length === NIGERIAN_STATES.length
+                              ? []
+                              : [...NIGERIAN_STATES],
+                        })
+                      }
+                    >
+                      {form.states.length === NIGERIAN_STATES.length ? "Clear all" : "Select all"}
+                    </button>
+                  </div>
+                  <div className="grid max-h-48 grid-cols-2 gap-1 overflow-y-auto rounded-lg border border-neutral-200 p-2 text-sm">
+                    {NIGERIAN_STATES.map((state) => (
+                      <label key={state} className="flex items-center gap-2 rounded px-1 py-1 hover:bg-neutral-50">
+                        <input
+                          type="checkbox"
+                          checked={form.states.includes(state)}
+                          onChange={(e) => {
+                            const next = e.target.checked
+                              ? [...form.states, state]
+                              : form.states.filter((item) => item !== state);
+                            setForm({ ...form, states: next });
+                          }}
+                        />
+                        <span>{state}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
               <Button onClick={onSave} className="w-full">
                 {editing ? "Save changes" : "Create"}
               </Button>
@@ -261,6 +326,9 @@ export default function AdminShippingPage() {
                 <p className="text-xs text-neutral-500">
                   {option.description || "No description"} ·{" "}
                   {option.price === 0 ? "Free" : formatPrice(option.price)}
+                  {option.states && option.states.length > 0
+                    ? ` · ${option.states.length} state${option.states.length === 1 ? "" : "s"}`
+                    : " · Nationwide"}
                 </p>
               </div>
             </div>
