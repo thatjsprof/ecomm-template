@@ -327,10 +327,9 @@ export async function verifyPayment(
 }
 
 export async function validateCoupon(code: string) {
-  const { data } = await api.post<ApiResponse<{ code: string; percentage: number }>>(
-    "/coupons/validate",
-    { code }
-  );
+  const { data } = await api.post<
+    ApiResponse<{ code: string; discountType: Coupon["discountType"]; amount: number }>
+  >("/coupons/validate", { code });
   return data;
 }
 

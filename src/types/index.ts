@@ -10,6 +10,8 @@ export type OrderStatus =
 
 export type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED";
 
+export type CouponDiscountType = "PERCENTAGE" | "FIXED";
+
 export interface User {
   id: string;
   name: string;
@@ -166,7 +168,8 @@ export interface Order {
 export interface Coupon {
   id: string;
   code: string;
-  percentage: number;
+  discountType: CouponDiscountType;
+  amount: string | number;
   expiresAt: string;
   active: boolean;
   maxRedemptions: number;

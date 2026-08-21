@@ -32,9 +32,10 @@ import {
 } from "@/components/ui/dialog";
 import { formatPrice } from "@/utils/format";
 import { siteConfig } from "@/config/site";
+import { couponDiscount, couponDiscountLabel } from "@/lib/coupon";
 import { NIGERIA, nigerianStateItems, preferredShippingOptionId, shippingOptionsForState } from "@/lib/nigeria";
 import { cn } from "@/lib/utils";
-import type { SavedAddress, ShippingOption } from "@/types";
+import type { CouponDiscountType, SavedAddress, ShippingOption } from "@/types";
 import {
   Select,
   SelectContent,
@@ -161,8 +162,11 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { items, subtotal, ready: cartReady, clearCart } = useCart();
-  const [discount, setDiscount] = useState(0);
-  const [couponApplied, setCouponApplied] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountType: CouponDiscountType;
+    amount: number;
+  } | null>(null);
   const [guestCheckout, setGuestCheckout] = useState(false);
   const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
@@ -316,6 +320,7 @@ export default function CheckoutPage() {
     }
   }, [selectedState, shippingOptions, shippingLoading, shippingOptionId, setValue]);
   const shipping = selectedShipping?.price ?? 0;
+  const discount = appliedCoupon ? couponDiscount(appliedCoupon, subtotal) : 0;
   const total = Math.max(0, subtotal - discount + shipping);
   const showAccountPrompt = !authLoading && !user && !guestCheckout;
   const usingNewAddress = !user || selectedAddressId === "new";
@@ -346,14 +351,12 @@ export default function CheckoutPage() {
     try {
       const res = await validateCoupon(code);
       if (res.success && res.data) {
-        setDiscount((subtotal * res.data.percentage) / 100);
-        setCouponApplied(res.data.code);
-        toast.success(`${res.data.percentage}% discount applied`);
+        setAppliedCoupon(res.data);
+        toast.success(`${couponDiscountLabel(res.data)} applied`);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Invalid coupon");
-      setDiscount(0);
-      setCouponApplied("");
+      setAppliedCoupon(null);
     }
   }
 
@@ -381,7 +384,7 @@ export default function CheckoutPage() {
           country: NIGERIA,
         },
         paymentProvider: values.paymentProvider,
-        couponCode: couponApplied || undefined,
+        couponCode: appliedCoupon?.code,
         shippingOptionId: values.shippingOptionId,
         saveAddress: Boolean(user && values.saveAddress),
         addressLabel: values.addressLabel || undefined,
@@ -440,7 +443,7 @@ export default function CheckoutPage() {
           country: NIGERIA,
         },
         paymentProvider: "bank_transfer",
-        couponCode: couponApplied || undefined,
+        couponCode: appliedCoupon?.code,
         shippingOptionId: values.shippingOptionId,
         saveAddress: Boolean(user && values.saveAddress),
         addressLabel: values.addressLabel || undefined,
