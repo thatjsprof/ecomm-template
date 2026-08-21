@@ -169,6 +169,8 @@ export interface Coupon {
   percentage: number;
   expiresAt: string;
   active: boolean;
+  maxRedemptions: number;
+  redemptionCount: number;
   createdAt: string;
 }
 

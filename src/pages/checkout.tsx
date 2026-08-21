@@ -350,8 +350,8 @@ export default function CheckoutPage() {
         setCouponApplied(res.data.code);
         toast.success(`${res.data.percentage}% discount applied`);
       }
-    } catch {
-      toast.error("Invalid coupon");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Invalid coupon");
       setDiscount(0);
       setCouponApplied("");
     }

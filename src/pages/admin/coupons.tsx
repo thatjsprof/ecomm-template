@@ -18,6 +18,7 @@ export default function AdminCouponsPage() {
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState("");
   const [percentage, setPercentage] = useState("10");
+  const [maxRedemptions, setMaxRedemptions] = useState("100");
   const [expiresAt, setExpiresAt] = useState("");
 
   async function load() {
@@ -30,21 +31,28 @@ export default function AdminCouponsPage() {
   }, []);
 
   async function onSave() {
+    const redemptions = Number(maxRedemptions);
+    if (!Number.isInteger(redemptions) || redemptions < 1) {
+      toast.error("Enter a valid number of redemptions");
+      return;
+    }
     try {
       await createCoupon({
         code,
         percentage: Number(percentage),
         expiresAt: new Date(expiresAt).toISOString(),
         active: true,
+        maxRedemptions: redemptions,
       });
       toast.success("Coupon created");
       setOpen(false);
       setCode("");
       setPercentage("10");
+      setMaxRedemptions("100");
       setExpiresAt("");
       load();
-    } catch {
-      toast.error("Failed to create coupon");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create coupon");
     }
   }
 
@@ -90,6 +98,15 @@ export default function AdminCouponsPage() {
                 />
               </div>
               <div className="space-y-1">
+                <Label>Number of redemptions</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  value={maxRedemptions}
+                  onChange={(e) => setMaxRedemptions(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
                 <Label>Expires at</Label>
                 <Input
                   type="datetime-local"
@@ -114,8 +131,13 @@ export default function AdminCouponsPage() {
             <div>
               <p className="font-medium">{coupon.code}</p>
               <p className="text-xs text-neutral-500">
-                {coupon.percentage}% off · expires{" "}
-                {new Date(coupon.expiresAt).toLocaleDateString()}
+                {coupon.percentage}% off · {coupon.redemptionCount ?? 0}/
+                {coupon.maxRedemptions} redemptions
+                {" · "}
+                expires {new Date(coupon.expiresAt).toLocaleDateString()}
+                {(coupon.redemptionCount ?? 0) >= coupon.maxRedemptions
+                  ? " · limit reached"
+                  : ""}
               </p>
             </div>
             <Button size="sm" variant="ghost" onClick={() => onDelete(coupon.id)}>
