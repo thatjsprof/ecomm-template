@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { formatPrice } from "@/utils/format";
 import { siteConfig } from "@/config/site";
-import { NIGERIA, nigerianStateItems, preferredShippingOption, preferredShippingOptionId } from "@/lib/nigeria";
+import { NIGERIA, nigerianStateItems, preferredShippingOptionId, shippingOptionsForState } from "@/lib/nigeria";
 import { cn } from "@/lib/utils";
 import type { SavedAddress, ShippingOption } from "@/types";
 import {
@@ -296,9 +296,9 @@ export default function CheckoutPage() {
   const selectedPayment =
     PAYMENT_PROVIDERS.find((provider) => provider.value === paymentProvider) ||
     PAYMENT_PROVIDERS[0];
-  const selectedShipping = selectedState
-    ? preferredShippingOption(shippingOptions, selectedState)
-    : null;
+  const availableShippingOptions = shippingOptionsForState(shippingOptions, selectedState);
+  const selectedShipping =
+    availableShippingOptions.find((option) => option.id === shippingOptionId) || null;
 
   useEffect(() => {
     if (shippingLoading) return;
@@ -708,26 +708,37 @@ export default function CheckoutPage() {
               <p className="text-sm text-neutral-500">
                 Select a state to see delivery options.
               </p>
-            ) : !selectedShipping ? (
+            ) : availableShippingOptions.length === 0 ? (
               <p className="text-sm text-neutral-500">
                 No shipping options available for {selectedState}.
               </p>
             ) : (
-              <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-4 text-sm">
-                <input type="hidden" {...register("shippingOptionId")} />
-                <div className="flex items-start justify-between gap-4">
-                  <span>
-                    <span className="block font-medium text-neutral-900">
-                      {selectedShipping.name}
+              <div className="space-y-3">
+                {availableShippingOptions.map((option) => (
+                  <label
+                    key={option.id}
+                    className={`flex cursor-pointer items-start justify-between gap-4 rounded-xl border px-4 py-4 text-sm transition-colors ${shippingOptionId === option.id
+                        ? "border-neutral-900 bg-neutral-50"
+                        : "border-neutral-200 hover:border-neutral-400"
+                      }`}
+                  >
+                    <span className="flex items-start gap-2">
+                      <input
+                        type="radio"
+                        value={option.id}
+                        className="mt-0.5"
+                        {...register("shippingOptionId")}
+                      />
+                      <span>
+                        <span className="block font-medium text-neutral-900">{option.name}</span>
+                        <span className="mt-0.5 block text-neutral-500">{option.description}</span>
+                      </span>
                     </span>
-                    <span className="mt-0.5 block text-neutral-500">
-                      {selectedShipping.description}
+                    <span className="shrink-0 font-medium text-neutral-900">
+                      {option.price === 0 ? "Free" : formatPrice(option.price)}
                     </span>
-                  </span>
-                  <span className="shrink-0 font-medium text-neutral-900">
-                    {selectedShipping.price === 0 ? "Free" : formatPrice(selectedShipping.price)}
-                  </span>
-                </div>
+                  </label>
+                ))}
               </div>
             )}
             {errors.shippingOptionId && (
